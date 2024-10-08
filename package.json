@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "A starter kit for building PWAs!",
   "main": "index.js",
+  "homepage": "https://imbriankeeley.github.io/FitnessNotes/",
   "scripts": {
     "dev-server": "vite --open",
     "dev": "npm run dev-server",
@@ -24,6 +25,7 @@
     "workbox-precaching": "^7.1.0"
   },
   "devDependencies": {
+    "gh-pages": "^6.1.1",
     "typescript": "^5.6.2",
     "vite": "^5.4.8",
     "vite-plugin-pwa": "^0.20.5"
