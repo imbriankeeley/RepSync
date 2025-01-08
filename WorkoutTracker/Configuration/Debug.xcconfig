@@ -1,0 +1,49 @@
+//
+// Debug.xcconfig
+// WorkoutTracker
+//
+
+// Bundle identifier with debug suffix
+PRODUCT_BUNDLE_IDENTIFIER = com.workouttracker.app.debug
+
+// Debug Information Format
+DEBUG_INFORMATION_FORMAT = dwarf-with-dsym
+
+// Optimization
+GCC_OPTIMIZATION_LEVEL = 0
+
+// Preprocessor Definitions
+GCC_PREPROCESSOR_DEFINITIONS = DEBUG=1 $(inherited)
+
+// Swift Compiler - Custom Flags
+SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG
+
+// Enable TestFlight and Debug Features
+ENABLE_TESTFLIGHT = YES
+ENABLE_DEBUG_FEATURES = YES
+
+// Code Signing
+CODE_SIGN_STYLE = Automatic
+DEVELOPMENT_TEAM = [YOUR_TEAM_ID]
+
+// Versioning
+MARKETING_VERSION = 1.0.0
+CURRENT_PROJECT_VERSION = 1
+
+// Asset Catalog Compiler
+ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon
+
+// Architecture
+ONLY_ACTIVE_ARCH = YES
+
+// Additional Compiler Flags
+OTHER_SWIFT_FLAGS = -D DEBUG
+
+// Enable Address Sanitizer for Debug
+ENABLE_ADDRESS_SANITIZER = YES
+
+// Deployment Target
+IPHONEOS_DEPLOYMENT_TARGET = 15.0
+
+// Include shared configuration
+#include "Shared.xcconfig"
