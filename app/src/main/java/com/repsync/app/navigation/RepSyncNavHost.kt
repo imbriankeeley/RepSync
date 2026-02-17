@@ -88,7 +88,12 @@ fun RepSyncNavHost(
         }
 
         composable(Screen.QuickWorkout.route) {
-            PlaceholderScreen(title = "Quick Workout")
+            ActiveWorkoutScreen(
+                workoutId = null,
+                onNavigateHome = {
+                    navController.popBackStack(Screen.Home.route, inclusive = false)
+                },
+            )
         }
     }
 }

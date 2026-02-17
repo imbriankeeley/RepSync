@@ -26,6 +26,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,15 +55,19 @@ import com.repsync.app.ui.viewmodel.ActiveWorkoutViewModel
 
 @Composable
 fun ActiveWorkoutScreen(
-    workoutId: Long,
+    workoutId: Long? = null,
     onNavigateHome: () -> Unit,
     viewModel: ActiveWorkoutViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    // Load workout template
+    // Load workout template or start quick workout
     LaunchedEffect(workoutId) {
-        viewModel.loadWorkout(workoutId)
+        if (workoutId != null) {
+            viewModel.loadWorkout(workoutId)
+        } else {
+            viewModel.startQuickWorkout()
+        }
     }
 
     // Navigate home after finish or cancel
@@ -80,7 +87,10 @@ fun ActiveWorkoutScreen(
             ActiveWorkoutHeader(
                 elapsedSeconds = uiState.elapsedSeconds,
                 workoutName = uiState.workoutName,
+                restTimerSecondsRemaining = uiState.restTimerSecondsRemaining,
                 onCloseClick = viewModel::showCancelDialog,
+                onStopwatchClick = viewModel::showRestTimerDialog,
+                onSkipRestTimer = viewModel::dismissRestTimer,
             )
 
             if (uiState.isLoading) {
@@ -195,6 +205,15 @@ fun ActiveWorkoutScreen(
                 onFinish = viewModel::finishWorkout,
             )
         }
+
+        // Rest Timer Duration dialog
+        if (uiState.showRestTimerDialog) {
+            RestTimerDurationDialog(
+                currentDurationSeconds = uiState.restTimerDurationSeconds,
+                onDismiss = viewModel::dismissRestTimerDialog,
+                onConfirm = { seconds -> viewModel.setRestTimerDuration(seconds) },
+            )
+        }
     }
 }
 
@@ -202,7 +221,10 @@ fun ActiveWorkoutScreen(
 private fun ActiveWorkoutHeader(
     elapsedSeconds: Long,
     workoutName: String,
+    restTimerSecondsRemaining: Int,
     onCloseClick: () -> Unit,
+    onStopwatchClick: () -> Unit,
+    onSkipRestTimer: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -215,12 +237,13 @@ private fun ActiveWorkoutHeader(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Timer icon
+            // Timer icon (tap to configure rest timer)
             Box(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(RoundedCornerShape(10.dp))
-                    .background(BackgroundCardElevated),
+                    .background(BackgroundCardElevated)
+                    .clickable { onStopwatchClick() },
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
@@ -268,6 +291,15 @@ private fun ActiveWorkoutHeader(
 
         Spacer(modifier = Modifier.height(8.dp))
         HorizontalDivider(color = Divider, thickness = 0.5.dp)
+
+        // Rest timer banner
+        if (restTimerSecondsRemaining > 0) {
+            Spacer(modifier = Modifier.height(8.dp))
+            RestTimerBanner(
+                secondsRemaining = restTimerSecondsRemaining,
+                onSkip = onSkipRestTimer,
+            )
+        }
     }
 }
 
@@ -544,6 +576,207 @@ private fun ActiveSetInputField(
             }
         },
     )
+}
+
+@Composable
+private fun RestTimerBanner(
+    secondsRemaining: Int,
+    onSkip: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(10.dp))
+            .background(BackgroundCardElevated)
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = "Rest",
+            color = TextOnDarkSecondary,
+            style = MaterialTheme.typography.labelMedium,
+        )
+
+        Text(
+            text = formatElapsedTime(secondsRemaining.toLong()),
+            color = PrimaryGreen,
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+        )
+
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(8.dp))
+                .background(BackgroundCard)
+                .clickable { onSkip() }
+                .padding(horizontal = 12.dp, vertical = 6.dp),
+        ) {
+            Text(
+                text = "Skip",
+                color = TextOnDarkSecondary,
+                style = MaterialTheme.typography.labelMedium,
+            )
+        }
+    }
+}
+
+@Composable
+private fun RestTimerDurationDialog(
+    currentDurationSeconds: Int,
+    onDismiss: () -> Unit,
+    onConfirm: (Int) -> Unit,
+) {
+    var selectedSeconds by remember { mutableStateOf(currentDurationSeconds) }
+    var customInput by remember { mutableStateOf("") }
+
+    val presets = listOf(30 to "30s", 60 to "1m", 90 to "1m 30s", 120 to "2m")
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(BackgroundPrimary.copy(alpha = 0.7f))
+            .clickable { onDismiss() },
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 32.dp)
+                .clip(RoundedCornerShape(20.dp))
+                .background(BackgroundCard)
+                .clickable(enabled = false) {}
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                text = "Rest Timer",
+                color = TextOnDark,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Preset chips
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                presets.forEach { (seconds, label) ->
+                    val isSelected = selectedSeconds == seconds && customInput.isEmpty()
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(40.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(if (isSelected) PrimaryGreen else BackgroundCardElevated)
+                            .clickable {
+                                selectedSeconds = seconds
+                                customInput = ""
+                            },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = label,
+                            color = if (isSelected) TextOnDark else TextOnDarkSecondary,
+                            style = MaterialTheme.typography.labelMedium,
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Custom input
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Text(
+                    text = "Custom (sec):",
+                    color = TextOnDarkSecondary,
+                    style = MaterialTheme.typography.labelMedium,
+                    modifier = Modifier.weight(1f),
+                )
+                BasicTextField(
+                    value = customInput,
+                    onValueChange = { input ->
+                        customInput = input.filter { it.isDigit() }
+                        customInput.toIntOrNull()?.let { selectedSeconds = it }
+                    },
+                    modifier = Modifier
+                        .width(80.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(InputBackground)
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(
+                        color = TextOnDark,
+                        textAlign = TextAlign.Center,
+                    ),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    cursorBrush = SolidColor(PrimaryGreen),
+                    decorationBox = { innerTextField ->
+                        Box(contentAlignment = Alignment.Center) {
+                            if (customInput.isEmpty()) {
+                                Text(
+                                    text = "${currentDurationSeconds}s",
+                                    color = TextOnDarkSecondary.copy(alpha = 0.5f),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    textAlign = TextAlign.Center,
+                                )
+                            }
+                            innerTextField()
+                        }
+                    },
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Cancel / Set buttons
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(BackgroundCardElevated)
+                        .clickable { onDismiss() },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "Cancel",
+                        color = TextOnDark,
+                        style = MaterialTheme.typography.labelLarge,
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(PrimaryGreen)
+                        .clickable {
+                            val finalSeconds = selectedSeconds.coerceAtLeast(5)
+                            onConfirm(finalSeconds)
+                        },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "Set",
+                        color = TextOnDark,
+                        style = MaterialTheme.typography.labelLarge,
+                    )
+                }
+            }
+        }
+    }
 }
 
 @Composable

@@ -1,9 +1,17 @@
 package com.repsync.app.ui.viewmodel
 
 import android.app.Application
+import android.content.Context
+import android.media.AudioManager
+import android.media.ToneGenerator
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.repsync.app.data.RepSyncDatabase
+import com.repsync.app.data.RestTimerPreferences
 import com.repsync.app.data.entity.CompletedExerciseEntity
 import com.repsync.app.data.entity.CompletedSetEntity
 import com.repsync.app.data.entity.CompletedWorkoutEntity
@@ -41,18 +49,32 @@ data class ActiveWorkoutUiState(
     val isFinished: Boolean = false,
     val isCancelled: Boolean = false,
     val templateId: Long? = null,
+    val isQuickWorkout: Boolean = false,
+    val restTimerSecondsRemaining: Int = 0,
+    val restTimerDurationSeconds: Int = RestTimerPreferences.DEFAULT_DURATION_SECONDS,
+    val showRestTimerDialog: Boolean = false,
 )
 
 class ActiveWorkoutViewModel(application: Application) : AndroidViewModel(application) {
 
     private val workoutDao = RepSyncDatabase.getDatabase(application).workoutDao()
     private val completedWorkoutDao = RepSyncDatabase.getDatabase(application).completedWorkoutDao()
+    private val restTimerPrefs = RestTimerPreferences.getInstance(application)
 
     private val _uiState = MutableStateFlow(ActiveWorkoutUiState())
     val uiState: StateFlow<ActiveWorkoutUiState> = _uiState.asStateFlow()
 
     private var timerJob: Job? = null
+    private var restTimerJob: Job? = null
     private var startedAtMillis: Long = 0L
+
+    init {
+        viewModelScope.launch {
+            restTimerPrefs.durationSeconds.collect { savedDuration ->
+                _uiState.value = _uiState.value.copy(restTimerDurationSeconds = savedDuration)
+            }
+        }
+    }
 
     fun loadWorkout(workoutId: Long) {
         startedAtMillis = System.currentTimeMillis()
@@ -94,6 +116,17 @@ class ActiveWorkoutViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
+    fun startQuickWorkout() {
+        startedAtMillis = System.currentTimeMillis()
+        startTimer()
+        _uiState.value = _uiState.value.copy(
+            workoutName = "Quick Workout",
+            exercises = emptyList(),
+            isLoading = false,
+            isQuickWorkout = true,
+        )
+    }
+
     private fun startTimer() {
         timerJob?.cancel()
         timerJob = viewModelScope.launch {
@@ -107,6 +140,13 @@ class ActiveWorkoutViewModel(application: Application) : AndroidViewModel(applic
 
     fun toggleSetCompleted(exerciseId: String, setIndex: Int) {
         updateSet(exerciseId, setIndex) { it.copy(isCompleted = !it.isCompleted) }
+
+        // Start rest timer if a set was just completed (not un-completed)
+        val exercise = _uiState.value.exercises.find { it.id == exerciseId }
+        val set = exercise?.sets?.getOrNull(setIndex)
+        if (set?.isCompleted == true) {
+            startRestTimer()
+        }
     }
 
     fun onSetWeightChange(exerciseId: String, setIndex: Int, weight: String) {
@@ -226,6 +266,7 @@ class ActiveWorkoutViewModel(application: Application) : AndroidViewModel(applic
 
     fun cancelWorkout() {
         timerJob?.cancel()
+        restTimerJob?.cancel()
         _uiState.value = _uiState.value.copy(
             showCancelDialog = false,
             isCancelled = true,
@@ -240,8 +281,84 @@ class ActiveWorkoutViewModel(application: Application) : AndroidViewModel(applic
         _uiState.value = _uiState.value.copy(showFinishDialog = false)
     }
 
+    // Rest timer
+
+    private fun startRestTimer() {
+        restTimerJob?.cancel()
+        val duration = _uiState.value.restTimerDurationSeconds
+        _uiState.value = _uiState.value.copy(restTimerSecondsRemaining = duration)
+
+        restTimerJob = viewModelScope.launch {
+            var remaining = duration
+            while (remaining > 0) {
+                delay(1000L)
+                remaining--
+                _uiState.value = _uiState.value.copy(restTimerSecondsRemaining = remaining)
+            }
+            onRestTimerComplete()
+        }
+    }
+
+    fun dismissRestTimer() {
+        restTimerJob?.cancel()
+        _uiState.value = _uiState.value.copy(restTimerSecondsRemaining = 0)
+    }
+
+    private fun onRestTimerComplete() {
+        triggerVibration()
+        triggerSound()
+    }
+
+    private fun triggerVibration() {
+        val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val vibratorManager = getApplication<Application>()
+                .getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+            vibratorManager.defaultVibrator
+        } else {
+            @Suppress("DEPRECATION")
+            getApplication<Application>()
+                .getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        }
+        val pattern = longArrayOf(0, 250, 150, 250)
+        vibrator.vibrate(VibrationEffect.createWaveform(pattern, -1))
+    }
+
+    private fun triggerSound() {
+        try {
+            val toneGen = ToneGenerator(AudioManager.STREAM_NOTIFICATION, ToneGenerator.MAX_VOLUME)
+            toneGen.startTone(ToneGenerator.TONE_PROP_BEEP2, 600)
+            viewModelScope.launch {
+                delay(700L)
+                toneGen.release()
+            }
+        } catch (_: Exception) {
+            // ToneGenerator can fail on some devices/emulators
+        }
+    }
+
+    // Rest timer duration dialog
+
+    fun showRestTimerDialog() {
+        _uiState.value = _uiState.value.copy(showRestTimerDialog = true)
+    }
+
+    fun dismissRestTimerDialog() {
+        _uiState.value = _uiState.value.copy(showRestTimerDialog = false)
+    }
+
+    fun setRestTimerDuration(seconds: Int) {
+        _uiState.value = _uiState.value.copy(
+            restTimerDurationSeconds = seconds,
+            showRestTimerDialog = false,
+        )
+        viewModelScope.launch {
+            restTimerPrefs.setDuration(seconds)
+        }
+    }
+
     fun finishWorkout() {
         timerJob?.cancel()
+        restTimerJob?.cancel()
         _uiState.value = _uiState.value.copy(showFinishDialog = false)
 
         viewModelScope.launch {
@@ -257,7 +374,7 @@ class ActiveWorkoutViewModel(application: Application) : AndroidViewModel(applic
                     date = today,
                     startedAt = startedAtMillis,
                     endedAt = now,
-                    isQuickWorkout = false,
+                    isQuickWorkout = state.isQuickWorkout,
                 )
             )
 
@@ -319,5 +436,6 @@ class ActiveWorkoutViewModel(application: Application) : AndroidViewModel(applic
     override fun onCleared() {
         super.onCleared()
         timerJob?.cancel()
+        restTimerJob?.cancel()
     }
 }
