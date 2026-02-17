@@ -38,6 +38,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.repsync.app.ui.theme.BackgroundCard
 import com.repsync.app.ui.theme.BackgroundCardElevated
 import com.repsync.app.ui.theme.BackgroundPrimary
+import com.repsync.app.ui.theme.DestructiveRed
 import com.repsync.app.ui.theme.InputBackground
 import com.repsync.app.ui.theme.PrimaryGreen
 import com.repsync.app.ui.theme.TextOnDark
@@ -390,17 +391,18 @@ private fun SetRow(
             .padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Set number badge
+        // Set number badge (tappable to remove when more than 1 set)
         Box(
             modifier = Modifier
                 .size(28.dp)
                 .clip(CircleShape)
-                .background(BackgroundCardElevated),
+                .background(BackgroundCardElevated)
+                .then(if (onRemove != null) Modifier.clickable { onRemove() } else Modifier),
             contentAlignment = Alignment.Center,
         ) {
             Text(
                 text = "$setNumber",
-                color = TextOnDarkSecondary,
+                color = if (onRemove != null) DestructiveRed else TextOnDarkSecondary,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Medium,
             )

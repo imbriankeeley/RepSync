@@ -32,7 +32,15 @@ class WorkoutsListViewModel(application: Application) : AndroidViewModel(applica
     private fun observeWorkouts() {
         viewModelScope.launch {
             workoutDao.getAllWorkoutsWithExercises().collect { workouts ->
-                _uiState.value = _uiState.value.copy(workouts = workouts)
+                val current = _uiState.value
+                // Refresh selectedWorkout if it's open so detail overlay stays in sync
+                val refreshedSelected = current.selectedWorkout?.let { selected ->
+                    workouts.find { it.workout.id == selected.workout.id }
+                }
+                _uiState.value = current.copy(
+                    workouts = workouts,
+                    selectedWorkout = refreshedSelected,
+                )
             }
         }
     }

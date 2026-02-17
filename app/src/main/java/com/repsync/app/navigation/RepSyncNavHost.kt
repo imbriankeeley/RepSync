@@ -7,6 +7,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.repsync.app.ui.screens.ActiveWorkoutScreen
 import com.repsync.app.ui.screens.HomeScreen
 import com.repsync.app.ui.screens.NewWorkoutScreen
 import com.repsync.app.ui.screens.PlaceholderScreen
@@ -76,9 +77,14 @@ fun RepSyncNavHost(
         composable(
             route = Screen.ActiveWorkout.route,
             arguments = listOf(navArgument("workoutId") { type = NavType.LongType }),
-        ) {
-            // Phase 5: Active Workout screen
-            PlaceholderScreen(title = "Active Workout")
+        ) { backStackEntry ->
+            val workoutId = backStackEntry.arguments?.getLong("workoutId") ?: 0L
+            ActiveWorkoutScreen(
+                workoutId = workoutId,
+                onNavigateHome = {
+                    navController.popBackStack(Screen.Home.route, inclusive = false)
+                },
+            )
         }
 
         composable(Screen.QuickWorkout.route) {
