@@ -32,9 +32,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -552,13 +555,27 @@ private fun ActiveSetInputField(
     modifier: Modifier = Modifier,
     keyboardType: KeyboardType = KeyboardType.Number,
 ) {
+    var textFieldValue by remember(value) {
+        mutableStateOf(TextFieldValue(text = value))
+    }
+
     BasicTextField(
-        value = value,
-        onValueChange = onValueChange,
+        value = textFieldValue,
+        onValueChange = { newValue ->
+            textFieldValue = newValue
+            onValueChange(newValue.text)
+        },
         modifier = modifier
             .padding(horizontal = 4.dp)
             .clip(RoundedCornerShape(8.dp))
             .background(InputBackground)
+            .onFocusChanged { focusState ->
+                if (focusState.isFocused && textFieldValue.text.isNotEmpty()) {
+                    textFieldValue = textFieldValue.copy(
+                        selection = TextRange(0, textFieldValue.text.length)
+                    )
+                }
+            }
             .padding(horizontal = 8.dp, vertical = 8.dp),
         textStyle = MaterialTheme.typography.bodyMedium.copy(
             color = TextOnDark,
@@ -569,7 +586,7 @@ private fun ActiveSetInputField(
         cursorBrush = SolidColor(PrimaryGreen),
         decorationBox = { innerTextField ->
             Box(contentAlignment = Alignment.Center) {
-                if (value.isEmpty()) {
+                if (textFieldValue.text.isEmpty()) {
                     Text(
                         text = placeholder,
                         color = TextOnDarkSecondary.copy(alpha = 0.5f),

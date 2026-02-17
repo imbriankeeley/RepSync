@@ -377,17 +377,22 @@ class ActiveWorkoutManager(application: Application) : AndroidViewModel(applicat
     }
 
     private fun triggerVibration() {
-        val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val vibratorManager = getApplication<Application>()
-                .getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
-            vibratorManager.defaultVibrator
-        } else {
-            @Suppress("DEPRECATION")
-            getApplication<Application>()
-                .getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        try {
+            val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val vibratorManager = getApplication<Application>()
+                    .getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+                vibratorManager.defaultVibrator
+            } else {
+                @Suppress("DEPRECATION")
+                getApplication<Application>()
+                    .getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+            }
+            // Double buzz pattern: buzz, pause, buzz, pause, buzz
+            val pattern = longArrayOf(0, 300, 200, 300, 200, 300)
+            vibrator.vibrate(VibrationEffect.createWaveform(pattern, -1))
+        } catch (_: Exception) {
+            // Vibration may not be available on all devices
         }
-        val pattern = longArrayOf(0, 250, 150, 250)
-        vibrator.vibrate(VibrationEffect.createWaveform(pattern, -1))
     }
 
     private fun triggerSound() {

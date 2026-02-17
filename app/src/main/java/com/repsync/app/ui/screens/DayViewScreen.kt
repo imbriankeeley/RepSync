@@ -44,6 +44,7 @@ import com.repsync.app.ui.theme.BackgroundCard
 import com.repsync.app.ui.theme.BackgroundCardElevated
 import com.repsync.app.ui.theme.BackgroundPrimary
 import com.repsync.app.ui.theme.CalendarWorkoutDay
+import com.repsync.app.ui.theme.DestructiveRed
 import com.repsync.app.ui.theme.Divider
 import com.repsync.app.ui.theme.PrimaryGreen
 import com.repsync.app.ui.theme.TextOnDark
@@ -79,6 +80,13 @@ fun DayViewScreen(
         if (uiState.workoutCopied) {
             kotlinx.coroutines.delay(2000)
             viewModel.clearWorkoutCopiedFlag()
+        }
+    }
+
+    LaunchedEffect(uiState.workoutDeleted) {
+        if (uiState.workoutDeleted) {
+            kotlinx.coroutines.delay(2000)
+            viewModel.clearWorkoutDeletedFlag()
         }
     }
 
@@ -134,6 +142,7 @@ fun DayViewScreen(
                             workoutWithExercises = workoutWithExercises,
                             onCopyToDay = { viewModel.showCopyDatePicker(workoutWithExercises.workout.id) },
                             onSaveAsTemplate = { viewModel.showSaveTemplateDialog(workoutWithExercises.workout.id) },
+                            onRemove = { viewModel.showDeleteDialog(workoutWithExercises.workout.id) },
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                     }
@@ -152,6 +161,9 @@ fun DayViewScreen(
         if (uiState.workoutCopied) {
             SuccessBanner(text = "Workout copied!")
         }
+        if (uiState.workoutDeleted) {
+            SuccessBanner(text = "Workout removed!")
+        }
 
         // Copy to date picker dialog
         if (uiState.showCopyDatePicker) {
@@ -168,6 +180,14 @@ fun DayViewScreen(
                 defaultName = workout?.workout?.name ?: "",
                 onDismiss = viewModel::dismissSaveTemplateDialog,
                 onSave = viewModel::saveAsTemplate,
+            )
+        }
+
+        // Delete workout confirmation dialog
+        if (uiState.showDeleteDialog) {
+            DeleteWorkoutDialog(
+                onDismiss = viewModel::dismissDeleteDialog,
+                onConfirm = viewModel::deleteWorkout,
             )
         }
     }
@@ -228,6 +248,7 @@ private fun CompletedWorkoutCard(
     workoutWithExercises: CompletedWorkoutWithExercises,
     onCopyToDay: () -> Unit,
     onSaveAsTemplate: () -> Unit,
+    onRemove: () -> Unit,
 ) {
     val workout = workoutWithExercises.workout
     val durationText = if (workout.endedAt != null) {
@@ -293,7 +314,7 @@ private fun CompletedWorkoutCard(
         // Action buttons
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             // Copy to another day
             Box(
@@ -306,7 +327,7 @@ private fun CompletedWorkoutCard(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    text = "Copy to Day",
+                    text = "Copy",
                     color = TextOnDark,
                     style = MaterialTheme.typography.labelLarge,
                 )
@@ -323,7 +344,24 @@ private fun CompletedWorkoutCard(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    text = "Save as Template",
+                    text = "Template",
+                    color = TextOnDark,
+                    style = MaterialTheme.typography.labelLarge,
+                )
+            }
+
+            // Remove workout
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(44.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(DestructiveRed)
+                    .clickable { onRemove() },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = "Remove",
                     color = TextOnDark,
                     style = MaterialTheme.typography.labelLarge,
                 )
@@ -683,6 +721,88 @@ private fun SaveAsTemplateDialog(
                 ) {
                     Text(
                         text = "Save",
+                        color = TextOnDark,
+                        style = MaterialTheme.typography.labelLarge,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DeleteWorkoutDialog(
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(BackgroundPrimary.copy(alpha = 0.7f))
+            .clickable { onDismiss() },
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 32.dp)
+                .clip(RoundedCornerShape(20.dp))
+                .background(BackgroundCard)
+                .clickable(enabled = false) {}
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                text = "Remove Workout?",
+                color = TextOnDark,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "This will permanently delete this workout from your history.",
+                color = TextOnDarkSecondary,
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center,
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                // Cancel
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(BackgroundCardElevated)
+                        .clickable { onDismiss() },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "Cancel",
+                        color = TextOnDark,
+                        style = MaterialTheme.typography.labelLarge,
+                    )
+                }
+
+                // Remove (destructive)
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(DestructiveRed)
+                        .clickable { onConfirm() },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "Remove",
                         color = TextOnDark,
                         style = MaterialTheme.typography.labelLarge,
                     )

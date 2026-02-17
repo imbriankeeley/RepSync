@@ -23,8 +23,11 @@ data class DayViewUiState(
     val copyingWorkoutId: Long? = null,
     val showSaveTemplateDialog: Boolean = false,
     val savingTemplateWorkoutId: Long? = null,
+    val showDeleteDialog: Boolean = false,
+    val deletingWorkoutId: Long? = null,
     val templateSaved: Boolean = false,
     val workoutCopied: Boolean = false,
+    val workoutDeleted: Boolean = false,
 )
 
 class DayViewViewModel(application: Application) : AndroidViewModel(application) {
@@ -162,11 +165,45 @@ class DayViewViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    // Delete workout
+
+    fun showDeleteDialog(workoutId: Long) {
+        _uiState.value = _uiState.value.copy(
+            showDeleteDialog = true,
+            deletingWorkoutId = workoutId,
+        )
+    }
+
+    fun dismissDeleteDialog() {
+        _uiState.value = _uiState.value.copy(
+            showDeleteDialog = false,
+            deletingWorkoutId = null,
+        )
+    }
+
+    fun deleteWorkout() {
+        val workoutId = _uiState.value.deletingWorkoutId ?: return
+        val workout = _uiState.value.workouts.find { it.workout.id == workoutId } ?: return
+
+        viewModelScope.launch {
+            completedWorkoutDao.deleteCompletedWorkout(workout.workout)
+            _uiState.value = _uiState.value.copy(
+                showDeleteDialog = false,
+                deletingWorkoutId = null,
+                workoutDeleted = true,
+            )
+        }
+    }
+
     fun clearTemplateSavedFlag() {
         _uiState.value = _uiState.value.copy(templateSaved = false)
     }
 
     fun clearWorkoutCopiedFlag() {
         _uiState.value = _uiState.value.copy(workoutCopied = false)
+    }
+
+    fun clearWorkoutDeletedFlag() {
+        _uiState.value = _uiState.value.copy(workoutDeleted = false)
     }
 }
