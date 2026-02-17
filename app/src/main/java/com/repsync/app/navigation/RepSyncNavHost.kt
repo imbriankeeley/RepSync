@@ -8,11 +8,14 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.repsync.app.ui.screens.ActiveWorkoutScreen
+import com.repsync.app.ui.screens.DayViewScreen
 import com.repsync.app.ui.screens.EditProfileScreen
 import com.repsync.app.ui.screens.HomeScreen
 import com.repsync.app.ui.screens.NewWorkoutScreen
 import com.repsync.app.ui.screens.ProfileScreen
 import com.repsync.app.ui.screens.WorkoutsListScreen
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun RepSyncNavHost(
@@ -33,7 +36,8 @@ fun RepSyncNavHost(
                     navController.navigate(Screen.QuickWorkout.route)
                 },
                 onDayClick = { date ->
-                    // Phase 8: navigate to day view
+                    val dateString = date.format(DateTimeFormatter.ISO_LOCAL_DATE)
+                    navController.navigate(Screen.DayView.createRoute(dateString))
                 },
             )
         }
@@ -104,6 +108,20 @@ fun RepSyncNavHost(
                 onNavigateHome = {
                     navController.popBackStack(Screen.Home.route, inclusive = false)
                 },
+            )
+        }
+
+        composable(
+            route = Screen.DayView.route,
+            arguments = listOf(navArgument("date") { type = NavType.StringType }),
+        ) { backStackEntry ->
+            val dateString = backStackEntry.arguments?.getString("date") ?: ""
+            val date = runCatching {
+                LocalDate.parse(dateString, DateTimeFormatter.ISO_LOCAL_DATE)
+            }.getOrDefault(LocalDate.now())
+            DayViewScreen(
+                date = date,
+                onNavigateBack = { navController.popBackStack() },
             )
         }
     }

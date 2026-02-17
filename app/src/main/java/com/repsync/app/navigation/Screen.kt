@@ -13,4 +13,7 @@ sealed class Screen(val route: String) {
         fun createRoute(workoutId: Long) = "active_workout/$workoutId"
     }
     data object EditProfile : Screen("edit_profile")
+    data object DayView : Screen("day_view/{date}") {
+        fun createRoute(date: String) = "day_view/$date"
+    }
 }
