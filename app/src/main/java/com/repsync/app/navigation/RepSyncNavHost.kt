@@ -7,9 +7,11 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import android.net.Uri
 import com.repsync.app.ui.screens.ActiveWorkoutScreen
 import com.repsync.app.ui.screens.DayViewScreen
 import com.repsync.app.ui.screens.EditProfileScreen
+import com.repsync.app.ui.screens.ExerciseHistoryScreen
 import com.repsync.app.ui.screens.HomeScreen
 import com.repsync.app.ui.screens.NewWorkoutScreen
 import com.repsync.app.ui.screens.ProfileScreen
@@ -101,6 +103,9 @@ fun RepSyncNavHost(
                     navController.popBackStack(Screen.Home.route, inclusive = false)
                 },
                 activeWorkoutManager = activeWorkoutManager,
+                onNavigateToExerciseHistory = { name ->
+                    navController.navigate(Screen.ExerciseHistory.createRoute(name))
+                },
             )
         }
 
@@ -111,6 +116,9 @@ fun RepSyncNavHost(
                     navController.popBackStack(Screen.Home.route, inclusive = false)
                 },
                 activeWorkoutManager = activeWorkoutManager,
+                onNavigateToExerciseHistory = { name ->
+                    navController.navigate(Screen.ExerciseHistory.createRoute(name))
+                },
             )
         }
 
@@ -124,6 +132,20 @@ fun RepSyncNavHost(
             }.getOrDefault(LocalDate.now())
             DayViewScreen(
                 date = date,
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToExerciseHistory = { name ->
+                    navController.navigate(Screen.ExerciseHistory.createRoute(name))
+                },
+            )
+        }
+
+        composable(
+            route = Screen.ExerciseHistory.route,
+            arguments = listOf(navArgument("exerciseName") { type = NavType.StringType }),
+        ) { backStackEntry ->
+            val exerciseName = Uri.decode(backStackEntry.arguments?.getString("exerciseName") ?: "")
+            ExerciseHistoryScreen(
+                exerciseName = exerciseName,
                 onNavigateBack = { navController.popBackStack() },
             )
         }

@@ -60,6 +60,7 @@ import java.util.Locale
 fun DayViewScreen(
     date: LocalDate,
     onNavigateBack: () -> Unit,
+    onNavigateToExerciseHistory: (String) -> Unit = {},
     viewModel: DayViewViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -143,6 +144,7 @@ fun DayViewScreen(
                             onCopyToDay = { viewModel.showCopyDatePicker(workoutWithExercises.workout.id) },
                             onSaveAsTemplate = { viewModel.showSaveTemplateDialog(workoutWithExercises.workout.id) },
                             onRemove = { viewModel.showDeleteDialog(workoutWithExercises.workout.id) },
+                            onExerciseNameClick = onNavigateToExerciseHistory,
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                     }
@@ -249,6 +251,7 @@ private fun CompletedWorkoutCard(
     onCopyToDay: () -> Unit,
     onSaveAsTemplate: () -> Unit,
     onRemove: () -> Unit,
+    onExerciseNameClick: (String) -> Unit = {},
 ) {
     val workout = workoutWithExercises.workout
     val durationText = if (workout.endedAt != null) {
@@ -303,7 +306,7 @@ private fun CompletedWorkoutCard(
 
         // Exercise summary
         workoutWithExercises.exercises.forEachIndexed { index, exerciseWithSets ->
-            ExerciseSummaryRow(exerciseWithSets)
+            ExerciseSummaryRow(exerciseWithSets, onExerciseNameClick)
             if (index < workoutWithExercises.exercises.size - 1) {
                 Spacer(modifier = Modifier.height(8.dp))
             }
@@ -371,7 +374,10 @@ private fun CompletedWorkoutCard(
 }
 
 @Composable
-private fun ExerciseSummaryRow(exerciseWithSets: CompletedExerciseWithSets) {
+private fun ExerciseSummaryRow(
+    exerciseWithSets: CompletedExerciseWithSets,
+    onExerciseNameClick: (String) -> Unit = {},
+) {
     val sets = exerciseWithSets.sets
     val setsCount = sets.size
 
@@ -379,12 +385,23 @@ private fun ExerciseSummaryRow(exerciseWithSets: CompletedExerciseWithSets) {
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = "$setsCount x ${exerciseWithSets.exercise.name}",
-            color = TextOnDark,
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.weight(1f),
-        )
+        Row(
+            modifier = Modifier
+                .weight(1f)
+                .clickable { onExerciseNameClick(exerciseWithSets.exercise.name) },
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "$setsCount x ${exerciseWithSets.exercise.name}",
+                color = PrimaryGreen,
+                style = MaterialTheme.typography.bodyLarge,
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = "\u23F3",
+                fontSize = 14.sp,
+            )
+        }
 
         // Show the best set (heaviest weight)
         val bestSet = sets.maxByOrNull { it.weight ?: 0.0 }

@@ -1,5 +1,7 @@
 package com.repsync.app.navigation
 
+import android.net.Uri
+
 sealed class Screen(val route: String) {
     data object Home : Screen("home")
     data object Profile : Screen("profile")
@@ -15,5 +17,8 @@ sealed class Screen(val route: String) {
     data object EditProfile : Screen("edit_profile")
     data object DayView : Screen("day_view/{date}") {
         fun createRoute(date: String) = "day_view/$date"
+    }
+    data object ExerciseHistory : Screen("exercise_history/{exerciseName}") {
+        fun createRoute(exerciseName: String) = "exercise_history/${Uri.encode(exerciseName)}"
     }
 }

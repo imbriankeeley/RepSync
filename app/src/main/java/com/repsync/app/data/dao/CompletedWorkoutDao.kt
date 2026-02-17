@@ -10,6 +10,7 @@ import com.repsync.app.data.entity.CompletedExerciseEntity
 import com.repsync.app.data.entity.CompletedSetEntity
 import com.repsync.app.data.entity.CompletedWorkoutEntity
 import com.repsync.app.data.entity.CompletedWorkoutWithExercises
+import com.repsync.app.data.entity.ExerciseHistoryRow
 import com.repsync.app.data.entity.PreviousSetResult
 import kotlinx.coroutines.flow.Flow
 
@@ -118,4 +119,34 @@ interface CompletedWorkoutDao {
     @Transaction
     @Query("SELECT * FROM completed_workouts WHERE isQuickWorkout = 1 ORDER BY startedAt DESC")
     fun getQuickWorkoutsWithExercises(): Flow<List<CompletedWorkoutWithExercises>>
+
+    /**
+     * Get full exercise history: all sets for a specific exercise name across all completed workouts.
+     */
+    @Query(
+        """
+        SELECT cw.date, cw.name AS workoutName, cs.weight, cs.reps, cs.orderIndex
+        FROM completed_sets cs
+        INNER JOIN completed_exercises ce ON cs.completedExerciseId = ce.id
+        INNER JOIN completed_workouts cw ON ce.completedWorkoutId = cw.id
+        WHERE ce.name = :exerciseName
+          AND cw.endedAt IS NOT NULL
+        ORDER BY cw.date DESC, cw.startedAt DESC, cs.orderIndex ASC
+        """
+    )
+    suspend fun getExerciseHistory(exerciseName: String): List<ExerciseHistoryRow>
+
+    /**
+     * Get the max weight ever recorded for a specific exercise.
+     */
+    @Query(
+        """
+        SELECT MAX(cs.weight)
+        FROM completed_sets cs
+        INNER JOIN completed_exercises ce ON cs.completedExerciseId = ce.id
+        INNER JOIN completed_workouts cw ON ce.completedWorkoutId = cw.id
+        WHERE ce.name = :exerciseName AND cw.endedAt IS NOT NULL
+        """
+    )
+    suspend fun getExerciseMaxWeight(exerciseName: String): Double?
 }

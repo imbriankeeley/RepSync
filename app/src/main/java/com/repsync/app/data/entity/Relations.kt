@@ -45,3 +45,11 @@ data class PreviousSetResult(
     val weight: Double?,
     val reps: Int?
 )
+
+data class ExerciseHistoryRow(
+    val date: String,
+    val workoutName: String,
+    val weight: Double?,
+    val reps: Int?,
+    val orderIndex: Int,
+)

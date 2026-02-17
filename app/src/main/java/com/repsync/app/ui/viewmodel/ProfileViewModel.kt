@@ -8,20 +8,41 @@ import android.net.Uri
 import androidx.exifinterface.media.ExifInterface
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.repsync.app.data.ReminderPreferences
 import com.repsync.app.data.RepSyncDatabase
+import com.repsync.app.data.WorkoutDaysPreferences
+import com.repsync.app.data.entity.BodyweightEntryEntity
 import com.repsync.app.data.entity.UserProfileEntity
+import com.repsync.app.notification.ReminderScheduler
+import com.repsync.app.ui.components.ChartDataPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.time.DayOfWeek
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 data class ProfileUiState(
     val displayName: String? = null,
     val avatarPath: String? = null,
     val completedWorkoutCount: Int = 0,
+    val bodyweightEntries: List<BodyweightEntryEntity> = emptyList(),
+    val bodyweightChartData: List<ChartDataPoint> = emptyList(),
+    val latestBodyweight: Double? = null,
+    val showAddBodyweightDialog: Boolean = false,
+    // Workout schedule days (source of truth for streaks AND reminders)
+    val workoutDays: Set<DayOfWeek> = emptySet(),
+    // Reminder settings (uses workoutDays for scheduling)
+    val reminderEnabled: Boolean = false,
+    val reminderHour: Int = ReminderPreferences.DEFAULT_HOUR,
+    val reminderMinute: Int = ReminderPreferences.DEFAULT_MINUTE,
+    val reminderMessage: String = ReminderPreferences.DEFAULT_MESSAGE,
+    val showTimePicker: Boolean = false,
 )
 
 class ProfileViewModel(application: Application) : AndroidViewModel(application) {
@@ -29,6 +50,10 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     private val db = RepSyncDatabase.getDatabase(application)
     private val userProfileDao = db.userProfileDao()
     private val completedWorkoutDao = db.completedWorkoutDao()
+    private val bodyweightDao = db.bodyweightDao()
+    private val reminderPrefs = ReminderPreferences.getInstance(application)
+    private val reminderScheduler = ReminderScheduler(application)
+    private val workoutDaysPrefs = WorkoutDaysPreferences.getInstance(application)
 
     private val _uiState = MutableStateFlow(ProfileUiState())
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
@@ -36,6 +61,9 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     init {
         observeProfile()
         observeWorkoutCount()
+        observeBodyweight()
+        observeReminderPrefs()
+        observeWorkoutDays()
     }
 
     private fun observeProfile() {
@@ -129,4 +157,152 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
             }
         }
     }
+
+    private fun observeBodyweight() {
+        viewModelScope.launch {
+            bodyweightDao.getAllEntriesChronological().collect { entries ->
+                val chartData = entries.map { entry ->
+                    ChartDataPoint(
+                        date = LocalDate.parse(entry.date, DateTimeFormatter.ISO_LOCAL_DATE),
+                        value = entry.weight,
+                    )
+                }
+                _uiState.value = _uiState.value.copy(
+                    bodyweightEntries = entries,
+                    bodyweightChartData = chartData,
+                    latestBodyweight = entries.lastOrNull()?.weight,
+                )
+            }
+        }
+    }
+
+    fun showAddBodyweightDialog() {
+        _uiState.value = _uiState.value.copy(showAddBodyweightDialog = true)
+    }
+
+    fun dismissAddBodyweightDialog() {
+        _uiState.value = _uiState.value.copy(showAddBodyweightDialog = false)
+    }
+
+    fun addBodyweightEntry(weight: Double) {
+        viewModelScope.launch {
+            val today = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
+            bodyweightDao.insert(
+                BodyweightEntryEntity(
+                    date = today,
+                    weight = weight,
+                )
+            )
+            _uiState.value = _uiState.value.copy(showAddBodyweightDialog = false)
+        }
+    }
+
+    fun deleteBodyweightEntry(entry: BodyweightEntryEntity) {
+        viewModelScope.launch {
+            bodyweightDao.delete(entry)
+        }
+    }
+
+    private fun observeWorkoutDays() {
+        viewModelScope.launch {
+            workoutDaysPrefs.days.collect { days ->
+                _uiState.value = _uiState.value.copy(workoutDays = days)
+            }
+        }
+    }
+
+    fun toggleWorkoutDay(day: DayOfWeek) {
+        viewModelScope.launch {
+            val current = _uiState.value.workoutDays.toMutableSet()
+            if (current.contains(day)) current.remove(day) else current.add(day)
+            workoutDaysPrefs.setDays(current)
+            // If reminders are enabled, reschedule with the updated workout days
+            if (_uiState.value.reminderEnabled) {
+                if (current.isNotEmpty()) {
+                    reminderScheduler.scheduleReminders(
+                        current, _uiState.value.reminderHour, _uiState.value.reminderMinute,
+                    )
+                } else {
+                    reminderScheduler.cancelAllReminders()
+                }
+            }
+        }
+    }
+
+    private fun observeReminderPrefs() {
+        viewModelScope.launch {
+            combine(
+                reminderPrefs.enabled,
+                reminderPrefs.hour,
+                reminderPrefs.minute,
+                reminderPrefs.message,
+            ) { enabled, hour, minute, message ->
+                ReminderState(
+                    enabled = enabled as Boolean,
+                    hour = hour as Int,
+                    minute = minute as Int,
+                    message = message as String,
+                )
+            }.collect { state ->
+                _uiState.value = _uiState.value.copy(
+                    reminderEnabled = state.enabled,
+                    reminderHour = state.hour,
+                    reminderMinute = state.minute,
+                    reminderMessage = state.message,
+                )
+            }
+        }
+    }
+
+    fun toggleReminderEnabled() {
+        viewModelScope.launch {
+            val newEnabled = !_uiState.value.reminderEnabled
+            reminderPrefs.setEnabled(newEnabled)
+            if (newEnabled) {
+                val state = _uiState.value
+                if (state.workoutDays.isNotEmpty()) {
+                    reminderScheduler.scheduleReminders(
+                        state.workoutDays, state.reminderHour, state.reminderMinute,
+                    )
+                }
+            } else {
+                reminderScheduler.cancelAllReminders()
+            }
+        }
+    }
+
+
+    fun setReminderTime(hour: Int, minute: Int) {
+        viewModelScope.launch {
+            reminderPrefs.setHour(hour)
+            reminderPrefs.setMinute(minute)
+            _uiState.value = _uiState.value.copy(showTimePicker = false)
+            if (_uiState.value.reminderEnabled && _uiState.value.workoutDays.isNotEmpty()) {
+                reminderScheduler.scheduleReminders(
+                    _uiState.value.workoutDays, hour, minute,
+                )
+            }
+        }
+    }
+
+    fun showTimePicker() {
+        _uiState.value = _uiState.value.copy(showTimePicker = true)
+    }
+
+    fun dismissTimePicker() {
+        _uiState.value = _uiState.value.copy(showTimePicker = false)
+    }
+
+    fun setReminderMessage(message: String) {
+        viewModelScope.launch {
+            reminderPrefs.setMessage(message)
+        }
+    }
 }
+
+private data class ReminderState(
+    val enabled: Boolean,
+    val hour: Int,
+    val minute: Int,
+    val message: String,
+)

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -28,6 +29,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.repsync.app.ui.components.MotivationalGif
 import com.repsync.app.ui.theme.BackgroundCard
 import com.repsync.app.ui.theme.CalendarWorkoutDay
 import com.repsync.app.ui.theme.PrimaryGreen
@@ -62,14 +64,29 @@ fun HomeScreen(
                 .weight(1f),
             verticalArrangement = Arrangement.SpaceBetween,
         ) {
-            // Calendar card
-            CalendarCard(
-                currentMonth = uiState.currentMonth,
-                workoutDates = uiState.workoutDates,
-                onPreviousMonth = viewModel::previousMonth,
-                onNextMonth = viewModel::nextMonth,
-                onDayClick = onDayClick,
-            )
+            // Calendar card + streak
+            Column {
+                CalendarCard(
+                    currentMonth = uiState.currentMonth,
+                    workoutDates = uiState.workoutDates,
+                    onPreviousMonth = viewModel::previousMonth,
+                    onNextMonth = viewModel::nextMonth,
+                    onDayClick = onDayClick,
+                )
+
+                StreakBadge(streak = uiState.currentStreak)
+            }
+
+            // Daily motivational GIF — fills available space between streak and buttons
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(vertical = 8.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                MotivationalGif()
+            }
 
             // Action buttons pinned to the bottom of the content area
             Column {
@@ -250,6 +267,33 @@ private fun CalendarCard(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun StreakBadge(streak: Int) {
+    if (streak <= 0) return
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 12.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(BackgroundCard)
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center,
+    ) {
+        Text(
+            text = "\uD83D\uDD25",
+            fontSize = 24.sp,
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = if (streak == 1) "1 Day Streak" else "$streak Day Streak",
+            color = TextOnDark,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+        )
     }
 }
 

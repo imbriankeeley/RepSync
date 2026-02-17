@@ -62,6 +62,7 @@ fun ActiveWorkoutScreen(
     workoutId: Long? = null,
     onNavigateHome: () -> Unit,
     activeWorkoutManager: ActiveWorkoutManager,
+    onNavigateToExerciseHistory: (String) -> Unit = {},
 ) {
     // These must run before any early return so the workout actually starts
     LaunchedEffect(Unit) {
@@ -161,6 +162,7 @@ fun ActiveWorkoutScreen(
                             onRemoveExercise = {
                                 activeWorkoutManager.removeExercise(exercise.id)
                             },
+                            onExerciseHistoryClick = onNavigateToExerciseHistory,
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                     }
@@ -334,6 +336,7 @@ private fun ActiveExerciseCard(
     onSetRepsChange: (Int, String) -> Unit,
     onToggleSetCompleted: (Int) -> Unit,
     onRemoveExercise: () -> Unit,
+    onExerciseHistoryClick: (String) -> Unit = {},
 ) {
     Column(
         modifier = Modifier
@@ -354,7 +357,23 @@ private fun ActiveExerciseCard(
                 onSuggestionSelected = onExerciseNameChange,
                 modifier = Modifier.weight(1f),
             )
-            Spacer(modifier = Modifier.width(8.dp))
+            if (exercise.name.isNotBlank()) {
+                Spacer(modifier = Modifier.width(6.dp))
+                Box(
+                    modifier = Modifier
+                        .size(28.dp)
+                        .clip(CircleShape)
+                        .background(BackgroundCardElevated)
+                        .clickable { onExerciseHistoryClick(exercise.name) },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "\u23F3",
+                        fontSize = 14.sp,
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.width(6.dp))
             Box(
                 modifier = Modifier
                     .size(28.dp)
@@ -555,8 +574,27 @@ private fun ActiveSetInputField(
     modifier: Modifier = Modifier,
     keyboardType: KeyboardType = KeyboardType.Number,
 ) {
-    var textFieldValue by remember(value) {
-        mutableStateOf(TextFieldValue(text = value))
+    var textFieldValue by remember { mutableStateOf(TextFieldValue(text = value)) }
+    var needsSelectAll by remember { mutableStateOf(false) }
+
+    // Sync external value changes (e.g. from ViewModel) without fighting local edits
+    LaunchedEffect(value) {
+        if (value != textFieldValue.text) {
+            textFieldValue = TextFieldValue(
+                text = value,
+                selection = TextRange(value.length),
+            )
+        }
+    }
+
+    // Apply select-all after focus, deferred so it doesn't conflict with IME
+    LaunchedEffect(needsSelectAll) {
+        if (needsSelectAll) {
+            textFieldValue = textFieldValue.copy(
+                selection = TextRange(0, textFieldValue.text.length)
+            )
+            needsSelectAll = false
+        }
     }
 
     BasicTextField(
@@ -571,9 +609,7 @@ private fun ActiveSetInputField(
             .background(InputBackground)
             .onFocusChanged { focusState ->
                 if (focusState.isFocused && textFieldValue.text.isNotEmpty()) {
-                    textFieldValue = textFieldValue.copy(
-                        selection = TextRange(0, textFieldValue.text.length)
-                    )
+                    needsSelectAll = true
                 }
             }
             .padding(horizontal = 8.dp, vertical = 8.dp),

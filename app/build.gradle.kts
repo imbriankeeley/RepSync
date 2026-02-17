@@ -96,6 +96,10 @@ dependencies {
     // DataStore (for user profile preferences)
     implementation("androidx.datastore:datastore-preferences:1.1.1")
 
+    // Coil (image loading + GIF support)
+    implementation("io.coil-kt:coil-compose:2.7.0")
+    implementation("io.coil-kt:coil-gif:2.7.0")
+
     // Debug
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
