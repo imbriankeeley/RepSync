@@ -19,6 +19,22 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        create("release") {
+            val keystoreFile = findProperty("REPSYNC_KEYSTORE_FILE") as String?
+            val keystorePass = findProperty("REPSYNC_KEYSTORE_PASSWORD") as String?
+            val keyAlias = findProperty("REPSYNC_KEY_ALIAS") as String?
+            val keyPass = findProperty("REPSYNC_KEY_PASSWORD") as String?
+
+            if (keystoreFile != null && keystorePass != null && keyAlias != null && keyPass != null) {
+                storeFile = file(keystoreFile)
+                storePassword = keystorePass
+                this.keyAlias = keyAlias
+                keyPassword = keyPass
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -26,6 +42,10 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            val releaseSigning = signingConfigs.findByName("release")
+            if (releaseSigning?.storeFile != null) {
+                signingConfig = releaseSigning
+            }
         }
     }
 
