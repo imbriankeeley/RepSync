@@ -53,6 +53,7 @@ data class ActiveWorkoutUiState(
     val restTimerSecondsRemaining: Int = 0,
     val restTimerDurationSeconds: Int = RestTimerPreferences.DEFAULT_DURATION_SECONDS,
     val showRestTimerDialog: Boolean = false,
+    val exerciseNameSuggestions: List<String> = emptyList(),
 )
 
 class ActiveWorkoutViewModel(application: Application) : AndroidViewModel(application) {
@@ -73,6 +74,14 @@ class ActiveWorkoutViewModel(application: Application) : AndroidViewModel(applic
             restTimerPrefs.durationSeconds.collect { savedDuration ->
                 _uiState.value = _uiState.value.copy(restTimerDurationSeconds = savedDuration)
             }
+        }
+        loadExerciseNames()
+    }
+
+    private fun loadExerciseNames() {
+        viewModelScope.launch {
+            val names = completedWorkoutDao.getAllExerciseNames()
+            _uiState.value = _uiState.value.copy(exerciseNameSuggestions = names)
         }
     }
 

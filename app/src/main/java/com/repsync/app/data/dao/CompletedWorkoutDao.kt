@@ -98,6 +98,20 @@ interface CompletedWorkoutDao {
     )
     suspend fun getAllPreviousSetsForExercise(exerciseName: String): List<PreviousSetResult>
 
+    /**
+     * Get all distinct exercise names from both completed workouts and templates (for autocomplete).
+     */
+    @Query(
+        """
+        SELECT DISTINCT name FROM (
+            SELECT name FROM completed_exercises
+            UNION
+            SELECT name FROM exercises
+        ) ORDER BY name ASC
+        """
+    )
+    suspend fun getAllExerciseNames(): List<String>
+
     @Query("SELECT * FROM completed_workouts WHERE isQuickWorkout = 1 ORDER BY startedAt DESC")
     fun getQuickWorkouts(): Flow<List<CompletedWorkoutEntity>>
 

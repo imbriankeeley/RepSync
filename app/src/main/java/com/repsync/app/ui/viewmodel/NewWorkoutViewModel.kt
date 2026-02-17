@@ -32,6 +32,7 @@ data class NewWorkoutUiState(
     val isSaving: Boolean = false,
     val isSaved: Boolean = false,
     val editingWorkoutId: Long? = null,
+    val exerciseNameSuggestions: List<String> = emptyList(),
 )
 
 class NewWorkoutViewModel(application: Application) : AndroidViewModel(application) {
@@ -41,6 +42,17 @@ class NewWorkoutViewModel(application: Application) : AndroidViewModel(applicati
 
     private val _uiState = MutableStateFlow(NewWorkoutUiState())
     val uiState: StateFlow<NewWorkoutUiState> = _uiState.asStateFlow()
+
+    init {
+        loadExerciseNames()
+    }
+
+    private fun loadExerciseNames() {
+        viewModelScope.launch {
+            val names = completedWorkoutDao.getAllExerciseNames()
+            _uiState.value = _uiState.value.copy(exerciseNameSuggestions = names)
+        }
+    }
 
     fun loadWorkoutForEditing(workoutId: Long) {
         viewModelScope.launch {

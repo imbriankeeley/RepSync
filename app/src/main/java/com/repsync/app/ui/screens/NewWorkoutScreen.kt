@@ -35,6 +35,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.repsync.app.ui.components.ExerciseNameField
 import com.repsync.app.ui.theme.BackgroundCard
 import com.repsync.app.ui.theme.BackgroundCardElevated
 import com.repsync.app.ui.theme.BackgroundPrimary
@@ -105,6 +106,7 @@ fun NewWorkoutScreen(
             ) { _, exercise ->
                 ExerciseCard(
                     exercise = exercise,
+                    exerciseNameSuggestions = uiState.exerciseNameSuggestions,
                     onExerciseNameChange = { name ->
                         viewModel.onExerciseNameChange(exercise.id, name)
                     },
@@ -243,6 +245,7 @@ private fun WorkoutNameInput(
 @Composable
 private fun ExerciseCard(
     exercise: ExerciseUiModel,
+    exerciseNameSuggestions: List<String>,
     onExerciseNameChange: (String) -> Unit,
     onAddSet: () -> Unit,
     onRemoveSet: (Int) -> Unit,
@@ -260,27 +263,14 @@ private fun ExerciseCard(
         // Exercise name row with delete button
         Row(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.Top,
         ) {
-            BasicTextField(
-                value = exercise.name,
-                onValueChange = onExerciseNameChange,
+            ExerciseNameField(
+                name = exercise.name,
+                suggestions = exerciseNameSuggestions,
+                onNameChange = onExerciseNameChange,
+                onSuggestionSelected = onExerciseNameChange,
                 modifier = Modifier.weight(1f),
-                textStyle = MaterialTheme.typography.titleLarge.copy(color = TextOnDark),
-                singleLine = true,
-                cursorBrush = SolidColor(PrimaryGreen),
-                decorationBox = { innerTextField ->
-                    Box {
-                        if (exercise.name.isEmpty()) {
-                            Text(
-                                text = "Exercise name",
-                                color = TextOnDarkSecondary.copy(alpha = 0.5f),
-                                style = MaterialTheme.typography.titleLarge,
-                            )
-                        }
-                        innerTextField()
-                    }
-                },
             )
             Spacer(modifier = Modifier.width(8.dp))
             Box(
