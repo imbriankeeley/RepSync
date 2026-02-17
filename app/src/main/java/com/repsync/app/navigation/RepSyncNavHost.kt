@@ -8,9 +8,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.repsync.app.ui.screens.ActiveWorkoutScreen
+import com.repsync.app.ui.screens.EditProfileScreen
 import com.repsync.app.ui.screens.HomeScreen
 import com.repsync.app.ui.screens.NewWorkoutScreen
-import com.repsync.app.ui.screens.PlaceholderScreen
+import com.repsync.app.ui.screens.ProfileScreen
 import com.repsync.app.ui.screens.WorkoutsListScreen
 
 @Composable
@@ -38,7 +39,17 @@ fun RepSyncNavHost(
         }
 
         composable(Screen.Profile.route) {
-            PlaceholderScreen(title = "Profile")
+            ProfileScreen(
+                onNavigateToEditProfile = {
+                    navController.navigate(Screen.EditProfile.route)
+                },
+            )
+        }
+
+        composable(Screen.EditProfile.route) {
+            EditProfileScreen(
+                onNavigateBack = { navController.popBackStack() },
+            )
         }
 
         composable(Screen.WorkoutsList.route) {
