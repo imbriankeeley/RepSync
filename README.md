@@ -14,7 +14,8 @@ A simple, **offline-first** Android workout app. Log workouts, build templates, 
 ## Requirements
 
 - **Android** only (no iOS in initial scope).
-- Min SDK 21+ (or 24+); target latest stable Android.
+- Min SDK 26; target SDK 35 (latest stable Android).
+- **Architecture:** Kotlin, Jetpack Compose, single-activity, MVVM.
 
 ## Building the app
 
@@ -37,7 +38,7 @@ Output: `app/build/outputs/apk/debug/app-debug.apk`
 ```
 Output: `app/build/outputs/apk/release/app-release.apk`
 
-For a signed release, configure signing in `app/build.gradle` (see [Android docs](https://developer.android.com/studio/publish/app-signing)). Do not commit keystores or passwords.
+For a signed release, configure signing in `app/build.gradle.kts` (see [Android docs](https://developer.android.com/studio/publish/app-signing)). Do not commit keystores or passwords.
 
 ### Run on a device
 
@@ -76,8 +77,8 @@ RepSync/
 │   ├── repSyncLogo.png     # App logo
 │   └── references/         # Design reference screens
 ├── app/                     # Android app module
-├── build.gradle
-└── settings.gradle
+├── build.gradle.kts
+└── settings.gradle.kts
 ```
 
 - **Spec:** See [docs/plan.md](docs/plan.md) for the single source of truth (flows, data model, UI, distribution).

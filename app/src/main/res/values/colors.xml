@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Background -->
+    <color name="background_primary">#FF000000</color>
+    <color name="background_surface">#FF1A1A1A</color>
+    <color name="background_card">#FF2C2C2E</color>
+    <color name="background_card_elevated">#FF3A3A3C</color>
+
+    <!-- Primary (muted sage/olive green) -->
+    <color name="primary_green">#FF8DAF8E</color>
+    <color name="primary_green_dark">#FF7E9D7C</color>
+
+    <!-- Destructive (muted red/pink) -->
+    <color name="destructive_red">#FFC48B8B</color>
+
+    <!-- Text -->
+    <color name="text_on_dark">#FFFFFFFF</color>
+    <color name="text_on_dark_secondary">#FFB0B0B0</color>
+    <color name="text_on_light">#FF1C1C1E</color>
+    <color name="text_on_light_secondary">#FF6C6C6E</color>
+
+    <!-- Cards (light variant for exercise table areas) -->
+    <color name="card_light">#FFD1D1D6</color>
+    <color name="card_light_secondary">#FFC7C7CC</color>
+
+    <!-- Input fields -->
+    <color name="input_background">#FF48484A</color>
+
+    <!-- Calendar highlight -->
+    <color name="calendar_workout_day">#FF8DAF8E</color>
+
+    <!-- Checkmark green -->
+    <color name="checkmark_green">#FF6BBF6B</color>
+
+    <!-- Divider -->
+    <color name="divider">#FF48484A</color>
+</resources>

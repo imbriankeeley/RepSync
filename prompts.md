@@ -1,8 +1,22 @@
 # RepSync — Claude Code Prompt Guide
 
-Use this guide to implement RepSync step-by-step in Claude Code. **Always keep `docs/plan.md` open or in context** — it is the single source of truth. Design assets are in the repo root: `repSyncLogo.png`, `IMG_1505.PNG` through `IMG_1538.PNG`; match layouts and theme to those screens.
+Use this guide to implement RepSync step-by-step in Claude Code. **Always keep `docs/plan.md` open or in context** — it is the single source of truth.
 
 Copy the prompt for each phase into Claude Code. Each prompt is self-contained and includes requirements and deliverables for that phase.
+
+---
+
+## Design Assets (where to look)
+
+All design references live under the **`assets/`** folder. The AI should open or reference these when implementing UI:
+
+| Asset | Path | Use for |
+|-------|------|--------|
+| App logo | `assets/repSyncLogo.png` | Launcher icon, in-app branding |
+| Screen mocks | `assets/references/IMG_1505.PNG` through `assets/references/IMG_1538.PNG` | Home, Workouts list, New Workout, active workout, Quick Workout, Profile, Calendar, dialogs (Cancel/Finish) |
+
+- **Theme and layout:** Match colors, spacing, rounded corners, and typography to the reference screens in `assets/references/`.
+- **plan.md Section 1** lists exact color values (dark background, muted green, destructive red, etc.); the PNGs show layout and hierarchy.
 
 ---
 
@@ -10,8 +24,9 @@ Copy the prompt for each phase into Claude Code. Each prompt is self-contained a
 
 1. Start with **Phase 1** and work in order; later phases depend on earlier ones.
 2. Before each phase, ensure the repo has the structure and files from previous phases.
-3. After each phase, verify the checklist items for that phase before moving on.
-4. If you use Compose, stick to Compose for all UI; if you use Views/Fragments, stick to that. Do not mix.
+3. **For each phase, reference the assets listed in that phase’s prompt** — open the relevant images to match layout and theme.
+4. After each phase, verify the checklist items for that phase before moving on.
+5. If you use Compose, stick to Compose for all UI; if you use Views/Fragments, stick to that. Do not mix.
 
 ---
 
@@ -22,6 +37,8 @@ Copy the prompt for each phase into Claude Code. Each prompt is self-contained a
 ```
 I'm building RepSync, an offline-first Android workout app. Use docs/plan.md as the single source of truth.
 
+Design assets to reference for this phase: assets/repSyncLogo.png (logo), and assets/references/IMG_1505.PNG through IMG_1538.PNG (all screen mocks for theme, colors, and layout). Open these and match theme/layout to them.
+
 Do Phase 1 only:
 
 1. Create the Android project structure as in plan.md Section 10:
@@ -29,7 +46,7 @@ Do Phase 1 only:
    - Single-activity with fragments OR Jetpack Compose for all screens — choose one and state which.
    - Repo root: app/ module, build.gradle, settings.gradle. No iOS or cloud.
 
-2. Define the theme to match the design assets (IMG_1505.PNG through IMG_1538.PNG in repo):
+2. Define the theme to match the design assets in assets/references/ (IMG_1505.PNG through IMG_1538.PNG):
    - Background: dark charcoal / near-black (#1a1a1a or similar).
    - Cards & inputs: light grey rounded rectangles; text on cards dark grey/black.
    - Primary actions: muted sage/olive green (e.g. #8DAF8E, #7E9D7C) — buttons like "Add Exercise", "Finish Workout", "Quick Go", "Start Workout", checkmarks.
@@ -39,7 +56,7 @@ Do Phase 1 only:
    - Typography: clean sans-serif; clear hierarchy (title bold, labels smaller).
    Put these in res/values/colors.xml and themes.xml (or Compose theme). Keep the UI minimal and match the reference images.
 
-3. Use repSyncLogo.png for the launcher icon (configure in manifest and res).
+3. Use assets/repSyncLogo.png for the launcher icon (configure in manifest and res; copy into app src/main res as needed).
 
 4. Add a minimal README.md at repo root with:
    - One-line project description.
@@ -60,6 +77,8 @@ Do not implement any screens or data yet — only project skeleton and theme. Co
 
 ```
 RepSync app — follow docs/plan.md. Phase 1 (project + theme) is done. Do Phase 2 only: local data layer.
+
+No UI assets needed this phase (data/models only). Keep assets/references/ in mind for future screens that will display this data.
 
 1. Add Room (and Kotlin coroutines/Flow if using) to app/build.gradle. No cloud, no backend.
 
@@ -90,6 +109,8 @@ Do not build UI screens yet. Ensure the project still builds and all entities/DA
 ```
 RepSync — docs/plan.md is the spec. Phases 1 and 2 are done (project, theme, Room + models). Do Phase 3 only: Home screen and app navigation.
 
+Design assets to reference for this phase: assets/references/ — use the screens that show Home (calendar month view), the "Workouts" and "Quick Go" buttons, and bottom nav (Home | Profile). Match layout, spacing, and green highlight on days with workouts.
+
 1. Set up navigation (Navigation Component or Compose Navigation) so we have:
    - Home (default)
    - Profile
@@ -98,7 +119,7 @@ RepSync — docs/plan.md is the spec. Phases 1 and 2 are done (project, theme, R
 2. Home screen (plan.md Section 5.1):
    - Calendar: month view (e.g. "October 2024"), arrows to change month. Days with at least one completed workout get a muted green highlight. Tapping a day should eventually open "Day view" (you can use a placeholder or simple toast for now; full Day view is Phase 8).
    - Two main buttons: "Workouts" (navigates to Workouts list) and "Quick Go" (starts a Quick Workout — can navigate to a placeholder screen for now; we'll implement in Phase 6).
-   - Bottom nav: Home | Profile. Match theme (dark background, rounded cards, muted green for primary buttons).
+   - Bottom nav: Home | Profile. Match theme (dark background, rounded cards, muted green for primary buttons) per assets/references/ and plan.md Section 1.
 
 3. Use ViewModel + LiveData or StateFlow for UI state. Single activity; stick to the same UI approach (Compose or Fragments) chosen in Phase 1.
 
@@ -117,6 +138,8 @@ Implement only Home + bottom nav + navigation to Workouts and to a placeholder f
 
 ```
 RepSync — follow docs/plan.md. Phases 1–3 are done. Do Phase 4 only: Workouts list, workout detail, and New Workout (create/edit template).
+
+Design assets to reference for this phase: assets/references/ — use the screens for Workouts list (header, back, search, FAB "+"), workout detail (name, exercise list, "Start Workout" button, X), and New Workout (name input, exercise cards, Set | Previous | +lbs | Reps table, "Add Set", "Add Exercise" green button, Save). Match layout and styling.
 
 1. Workouts list (plan.md Section 5.2):
    - Header: Back (to Home), title "Workouts", optional search icon (filter by name).
@@ -138,7 +161,7 @@ RepSync — follow docs/plan.md. Phases 1–3 are done. Do Phase 4 only: Workout
    - Previous: show last logged weight/reps for that exercise from history (use the "previous" query from Phase 2), if any.
    - Save: store the template in Room; user can start it later from Workouts.
 
-Match design assets: dark theme, light grey cards, muted green for "Add Exercise" and primary actions, rounded corners. No cloud; all local.
+Match the design assets in assets/references/ (Workouts + New Workout screens): dark theme, light grey cards, muted green for "Add Exercise" and primary actions, rounded corners. No cloud; all local.
 ```
 
 **Done when:** Workouts list shows templates; search (optional) works; tap row → detail → Start Workout; New Workout allows name + exercises + sets with Previous column and Save; data persists in Room.
@@ -152,6 +175,8 @@ Match design assets: dark theme, light grey cards, muted green for "Add Exercise
 ```
 RepSync — docs/plan.md is the spec. Phases 1–4 are done. Do Phase 5 only: Active Workout screen when starting from a template.
 
+Design assets to reference for this phase: assets/references/ — use the screens for active workout (timer/stopwatch, workout name, X close), exercise/set table (Set, Previous, +lbs, Reps, "+ Add Set", checkmarks), "Add Exercise" and "Finish Workout" green buttons, and the dialogs "Cancel Workout?" (Resume / Cancel) and "Finish Workout?" (Cancel / Finish). Match layout and destructive red/pink for Cancel/X.
+
 1. Active Workout screen (plan.md Section 5.4):
    - Header: Timer (e.g. stopwatch icon + "00:01"), workout name (e.g. "Chest Workout"), X (close) on the right.
    - Timer: elapsed time (stopwatch). Optional: small control or settings for rest timer or target duration — keep it simple per design.
@@ -164,7 +189,7 @@ RepSync — docs/plan.md is the spec. Phases 1–4 are done. Do Phase 5 only: Ac
 
 3. Persist in-progress state if needed (e.g. so closing the app doesn't lose the session — optional for MVP; at minimum, finishing or canceling must behave as above).
 
-Match design: muted green for primary actions, destructive red/pink for Cancel/X, dark background, rounded cards. All local; no cloud.
+Match the design assets in assets/references/ (active workout + dialogs): muted green for primary actions, destructive red/pink for Cancel/X, dark background, rounded cards. All local; no cloud.
 ```
 
 **Done when:** Starting a template opens Active Workout with timer and exercise/set table; Add Set and Add Exercise work; Cancel Workout dialog (Resume/Cancel) and Finish Workout dialog (Cancel/Finish) work; on Finish, data saves to Room and profile count updates; user returns to Home.
@@ -178,6 +203,8 @@ Match design: muted green for primary actions, destructive red/pink for Cancel/X
 ```
 RepSync — follow docs/plan.md. Phases 1–5 are done. Do Phase 6 only: Quick Workout flow.
 
+Design assets to reference for this phase: same as Phase 5 — assets/references/ screens for active/Quick Workout (title "Quick Workout", same table and buttons). Reuse the same UI; only difference is no pre-filled exercises.
+
 1. Quick Workout (plan.md Section 5.5):
    - Same UI as Active Workout, but title is "Quick Workout" and there are no pre-filled exercises. User adds all exercises via "Add Exercise".
    - Timer, Add Set, Add Exercise, Finish Workout, and Close (X) with "Cancel Workout?" behave the same as in Phase 5.
@@ -187,7 +214,7 @@ RepSync — follow docs/plan.md. Phases 1–5 are done. Do Phase 6 only: Quick W
 
 3. Reuse the same Active Workout screen/logic where possible; differentiate only by "from template" vs "quick" (no template).
 
-Match theme and behavior to plan.md and design assets. No cloud.
+Match theme and behavior to plan.md and assets/references/ (Quick Workout screens). No cloud.
 ```
 
 **Done when:** Quick Go opens Quick Workout; user can add exercises and sets, finish or cancel; completed Quick Workout is saved for today and appears in history/calendar.
@@ -201,6 +228,8 @@ Match theme and behavior to plan.md and design assets. No cloud.
 ```
 RepSync — docs/plan.md is the spec. Phases 1–6 are done. Do Phase 7 only: Profile screen.
 
+Design assets to reference for this phase: assets/references/ — use the Profile screen (header "Profile", profile card with icon/placeholder, "Guest" or name, "X Workouts" count, chevron to settings). Match layout and card style.
+
 1. Profile screen (plan.md Section 5.6):
    - Header: "Profile".
    - Card: profile icon (or placeholder), "Guest" (or profile name if set), "X Workouts" (completed workout count from Room). Chevron (or tap) to open profile/settings.
@@ -210,7 +239,7 @@ RepSync — docs/plan.md is the spec. Phases 1–6 are done. Do Phase 7 only: Pr
 
 3. Workout count must reflect total completed workouts (from CompletedWorkout); update when user finishes a workout (already done in Phase 5/6).
 
-Match design: dark background, light grey card, muted green if needed for actions. No sign-up or sync.
+Match the Profile design in assets/references/: dark background, light grey card, muted green if needed for actions. No sign-up or sync.
 ```
 
 **Done when:** Profile shows Guest or name and completed workout count; tapping the card opens profile/settings where user can set name and optionally avatar; data is local only.
@@ -224,6 +253,8 @@ Match design: dark background, light grey card, muted green if needed for action
 ```
 RepSync — follow docs/plan.md. Phases 1–7 are done. Do Phase 8 only: Calendar day view and copy/create-from-day.
 
+Design assets to reference for this phase: assets/references/ — use the Calendar and day view screens (tap day → day view, list of workouts for that day, "Copy to another day", "Use as template" / "Create workout from a day"). Match layout and actions.
+
 1. Day view (plan.md Section 5.7):
    - From Home, tapping a calendar day opens Day view for that date.
    - Day view: list of workouts completed (or started) that day. For each: name, duration, list of exercises/sets if desired.
@@ -234,7 +265,7 @@ RepSync — follow docs/plan.md. Phases 1–7 are done. Do Phase 8 only: Calenda
    - Copy a workout from one day to another.
    - Create a new workout template from a past day (including quick workouts).
 
-Match design and theme. All local; no cloud.
+Match the Calendar/day view design in assets/references/ and plan.md theme. All local; no cloud.
 ```
 
 **Done when:** Tapping a day opens Day view with list of workouts; user can copy a workout to another day and create a template from a day's workout; Quick Workout can be saved as template if desired.
@@ -248,6 +279,8 @@ Match design and theme. All local; no cloud.
 ```
 RepSync — docs/plan.md is the spec. Phases 1–8 are done. Do Phase 9 only: README and distribution.
 
+No new UI this phase. Repo structure (plan.md Section 10) includes docs/, prompts.md, assets/repSyncLogo.png, assets/references/ (design PNGs), app/, build files. Do not delete or move design assets.
+
 1. Update README.md at repo root to include:
    - Short project description (offline-first Android workout app).
    - How to build the APK (e.g. ./gradlew assembleRelease).
@@ -257,7 +290,7 @@ RepSync — docs/plan.md is the spec. Phases 1–8 are done. Do Phase 9 only: RE
 
 2. Ensure the project produces a release APK (or AAB) that can be installed on a device. If signing is required, document the steps (without committing keystore or passwords).
 
-3. Confirm repo structure matches plan.md Section 10 (app/, plan.md, logo, design assets, README). Do not delete design reference images.
+3. Confirm repo structure matches plan.md Section 10 (docs/, prompts.md, assets/repSyncLogo.png, assets/references/*.PNG, app/, README). Do not delete design reference images in assets/references/.
 
 Do not add Spotify or cloud features; plan.md Section 7 says Spotify is future only.
 ```
@@ -288,7 +321,7 @@ After all phases, confirm:
 If you prefer to give Claude the whole scope in one go (e.g. in a new chat with plan.md and this file), use the following. Prefer the phased prompts above for better control and debugging.
 
 ```
-Build RepSync from scratch using docs/plan.md as the single source of truth. Match the design assets in the repo (repSyncLogo.png, IMG_1505.PNG–IMG_1538.PNG): dark theme, muted sage green primary actions, light grey cards, rounded corners, clean typography.
+Build RepSync from scratch using docs/plan.md as the single source of truth. Design assets to reference: assets/repSyncLogo.png (logo) and assets/references/IMG_1505.PNG through IMG_1538.PNG (all screen mocks). Match layout, spacing, and theme: dark background, muted sage green primary actions, light grey cards, rounded corners, clean typography.
 
 Requirements:
 - Android only (Kotlin, Gradle). Min SDK 21+ or 24+, target latest. Single-activity; choose Jetpack Compose OR Fragments and use consistently.
@@ -302,4 +335,4 @@ Deliver a buildable Android app that can be installed on a device and updated vi
 
 ---
 
-*End of prompt guide. Keep docs/plan.md and design assets in context for every phase.*
+*End of prompt guide. Keep docs/plan.md in context for every phase, and reference the assets in assets/ (repSyncLogo.png) and assets/references/ (IMG_1505.PNG–IMG_1538.PNG) when building UI.*
