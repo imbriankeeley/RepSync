@@ -38,7 +38,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.repsync.app.ui.components.ExerciseNameField
 import com.repsync.app.ui.theme.BackgroundCard
 import com.repsync.app.ui.theme.BackgroundCardElevated
@@ -52,30 +51,46 @@ import com.repsync.app.ui.theme.TextOnDark
 import com.repsync.app.ui.theme.TextOnDarkSecondary
 import com.repsync.app.ui.viewmodel.ActiveExerciseUiModel
 import com.repsync.app.ui.viewmodel.ActiveSetUiModel
-import com.repsync.app.ui.viewmodel.ActiveWorkoutViewModel
+import com.repsync.app.ui.viewmodel.ActiveWorkoutManager
+import com.repsync.app.util.formatElapsedTime
 
 @Composable
 fun ActiveWorkoutScreen(
     workoutId: Long? = null,
     onNavigateHome: () -> Unit,
-    viewModel: ActiveWorkoutViewModel = viewModel(),
+    activeWorkoutManager: ActiveWorkoutManager,
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-
-    // Load workout template or start quick workout
-    LaunchedEffect(workoutId) {
-        if (workoutId != null) {
-            viewModel.loadWorkout(workoutId)
-        } else {
-            viewModel.startQuickWorkout()
+    // These must run before any early return so the workout actually starts
+    LaunchedEffect(Unit) {
+        if (!activeWorkoutManager.hasActiveWorkout()) {
+            if (workoutId != null) {
+                activeWorkoutManager.loadWorkout(workoutId)
+            } else {
+                activeWorkoutManager.startQuickWorkout()
+            }
         }
     }
 
-    // Navigate home after finish or cancel
-    LaunchedEffect(uiState.isFinished, uiState.isCancelled) {
-        if (uiState.isFinished || uiState.isCancelled) {
+    // Navigate home when workout ends (finished or cancelled)
+    LaunchedEffect(Unit) {
+        activeWorkoutManager.workoutEndedEvent.collect {
             onNavigateHome()
         }
+    }
+
+    val activeState by activeWorkoutManager.activeWorkoutState.collectAsState()
+    val uiState = activeState ?: run {
+        Box(
+            modifier = Modifier.fillMaxSize().background(BackgroundPrimary),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = "Loading...",
+                color = TextOnDarkSecondary,
+                style = MaterialTheme.typography.bodyLarge,
+            )
+        }
+        return
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -89,9 +104,9 @@ fun ActiveWorkoutScreen(
                 elapsedSeconds = uiState.elapsedSeconds,
                 workoutName = uiState.workoutName,
                 restTimerSecondsRemaining = uiState.restTimerSecondsRemaining,
-                onCloseClick = viewModel::showCancelDialog,
-                onStopwatchClick = viewModel::showRestTimerDialog,
-                onSkipRestTimer = viewModel::dismissRestTimer,
+                onCloseClick = activeWorkoutManager::showCancelDialog,
+                onStopwatchClick = activeWorkoutManager::showRestTimerDialog,
+                onSkipRestTimer = activeWorkoutManager::dismissRestTimer,
             )
 
             if (uiState.isLoading) {
@@ -125,23 +140,23 @@ fun ActiveWorkoutScreen(
                             exercise = exercise,
                             exerciseNameSuggestions = uiState.exerciseNameSuggestions,
                             onExerciseNameChange = { name ->
-                                viewModel.onExerciseNameChange(exercise.id, name)
+                                activeWorkoutManager.onExerciseNameChange(exercise.id, name)
                             },
-                            onAddSet = { viewModel.addSet(exercise.id) },
+                            onAddSet = { activeWorkoutManager.addSet(exercise.id) },
                             onRemoveSet = { setIndex ->
-                                viewModel.removeSet(exercise.id, setIndex)
+                                activeWorkoutManager.removeSet(exercise.id, setIndex)
                             },
                             onSetWeightChange = { setIndex, weight ->
-                                viewModel.onSetWeightChange(exercise.id, setIndex, weight)
+                                activeWorkoutManager.onSetWeightChange(exercise.id, setIndex, weight)
                             },
                             onSetRepsChange = { setIndex, reps ->
-                                viewModel.onSetRepsChange(exercise.id, setIndex, reps)
+                                activeWorkoutManager.onSetRepsChange(exercise.id, setIndex, reps)
                             },
                             onToggleSetCompleted = { setIndex ->
-                                viewModel.toggleSetCompleted(exercise.id, setIndex)
+                                activeWorkoutManager.toggleSetCompleted(exercise.id, setIndex)
                             },
                             onRemoveExercise = {
-                                viewModel.removeExercise(exercise.id)
+                                activeWorkoutManager.removeExercise(exercise.id)
                             },
                         )
                         Spacer(modifier = Modifier.height(12.dp))
@@ -156,7 +171,7 @@ fun ActiveWorkoutScreen(
                                 .height(48.dp)
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(PrimaryGreen)
-                                .clickable { viewModel.addExercise() },
+                                .clickable { activeWorkoutManager.addExercise() },
                             contentAlignment = Alignment.Center,
                         ) {
                             Text(
@@ -176,7 +191,7 @@ fun ActiveWorkoutScreen(
                                 .height(52.dp)
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(PrimaryGreen)
-                                .clickable { viewModel.showFinishDialog() },
+                                .clickable { activeWorkoutManager.showFinishDialog() },
                             contentAlignment = Alignment.Center,
                         ) {
                             Text(
@@ -195,16 +210,16 @@ fun ActiveWorkoutScreen(
         // Cancel Workout dialog
         if (uiState.showCancelDialog) {
             CancelWorkoutDialog(
-                onResume = viewModel::dismissCancelDialog,
-                onCancel = viewModel::cancelWorkout,
+                onResume = activeWorkoutManager::dismissCancelDialog,
+                onCancel = activeWorkoutManager::cancelWorkout,
             )
         }
 
         // Finish Workout dialog
         if (uiState.showFinishDialog) {
             FinishWorkoutDialog(
-                onCancel = viewModel::dismissFinishDialog,
-                onFinish = viewModel::finishWorkout,
+                onCancel = activeWorkoutManager::dismissFinishDialog,
+                onFinish = activeWorkoutManager::finishWorkout,
             )
         }
 
@@ -212,8 +227,8 @@ fun ActiveWorkoutScreen(
         if (uiState.showRestTimerDialog) {
             RestTimerDurationDialog(
                 currentDurationSeconds = uiState.restTimerDurationSeconds,
-                onDismiss = viewModel::dismissRestTimerDialog,
-                onConfirm = { seconds -> viewModel.setRestTimerDuration(seconds) },
+                onDismiss = activeWorkoutManager::dismissRestTimerDialog,
+                onConfirm = { seconds -> activeWorkoutManager.setRestTimerDuration(seconds) },
             )
         }
     }
@@ -913,12 +928,6 @@ private fun FinishWorkoutDialog(
             }
         }
     }
-}
-
-private fun formatElapsedTime(totalSeconds: Long): String {
-    val minutes = totalSeconds / 60
-    val seconds = totalSeconds % 60
-    return "%02d:%02d".format(minutes, seconds)
 }
 
 private fun formatWeightDisplay(weight: Double): String {

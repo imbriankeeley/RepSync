@@ -17,8 +17,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.repsync.app.ui.theme.BackgroundSurface
-import com.repsync.app.ui.theme.PrimaryGreen
+import com.repsync.app.ui.theme.BackgroundCard
+import com.repsync.app.ui.theme.BackgroundCardElevated
 import com.repsync.app.ui.theme.TextOnDark
 import com.repsync.app.ui.theme.TextOnDarkSecondary
 
@@ -36,10 +36,8 @@ fun BottomNavBar(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
-            .background(BackgroundSurface)
-            .padding(vertical = 12.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly,
+            .padding(horizontal = 24.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         BottomNavTab.entries.forEach { tab ->
@@ -47,14 +45,16 @@ fun BottomNavBar(
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .height(44.dp)
+                    .height(56.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(if (isSelected) BackgroundCardElevated else BackgroundCard)
                     .clickable { onTabSelected(tab) },
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = tab.label,
-                    color = if (isSelected) PrimaryGreen else TextOnDarkSecondary,
-                    fontSize = 18.sp,
+                    color = if (isSelected) TextOnDark else TextOnDarkSecondary,
+                    fontSize = 20.sp,
                     fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
                 )
             }

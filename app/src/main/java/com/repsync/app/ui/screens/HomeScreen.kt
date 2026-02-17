@@ -55,33 +55,42 @@ fun HomeScreen(
             .padding(horizontal = 16.dp)
             .padding(top = 16.dp),
     ) {
-        // Calendar card
-        CalendarCard(
-            currentMonth = uiState.currentMonth,
-            workoutDates = uiState.workoutDates,
-            onPreviousMonth = viewModel::previousMonth,
-            onNextMonth = viewModel::nextMonth,
-            onDayClick = onDayClick,
-        )
+        // Content area — matches the profile card's extent
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+            verticalArrangement = Arrangement.SpaceBetween,
+        ) {
+            // Calendar card
+            CalendarCard(
+                currentMonth = uiState.currentMonth,
+                workoutDates = uiState.workoutDates,
+                onPreviousMonth = viewModel::previousMonth,
+                onNextMonth = viewModel::nextMonth,
+                onDayClick = onDayClick,
+            )
 
-        Spacer(modifier = Modifier.weight(1f))
+            // Action buttons pinned to the bottom of the content area
+            Column {
+                ActionButton(
+                    text = "Workouts",
+                    backgroundColor = BackgroundCard,
+                    onClick = onNavigateToWorkouts,
+                )
 
-        // Action buttons
-        ActionButton(
-            text = "Workouts",
-            backgroundColor = BackgroundCard,
-            onClick = onNavigateToWorkouts,
-        )
+                Spacer(modifier = Modifier.height(12.dp))
 
-        Spacer(modifier = Modifier.height(12.dp))
+                ActionButton(
+                    text = "Quick Go",
+                    backgroundColor = PrimaryGreen,
+                    onClick = onNavigateToQuickWorkout,
+                )
+            }
+        }
 
-        ActionButton(
-            text = "Quick Go",
-            backgroundColor = PrimaryGreen,
-            onClick = onNavigateToQuickWorkout,
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
+        // Bottom spacing — matches ProfileScreen's 16dp spacer
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 

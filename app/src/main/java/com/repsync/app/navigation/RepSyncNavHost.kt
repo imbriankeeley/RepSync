@@ -14,12 +14,14 @@ import com.repsync.app.ui.screens.HomeScreen
 import com.repsync.app.ui.screens.NewWorkoutScreen
 import com.repsync.app.ui.screens.ProfileScreen
 import com.repsync.app.ui.screens.WorkoutsListScreen
+import com.repsync.app.ui.viewmodel.ActiveWorkoutManager
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @Composable
 fun RepSyncNavHost(
     navController: NavHostController,
+    activeWorkoutManager: ActiveWorkoutManager,
     modifier: Modifier = Modifier,
 ) {
     NavHost(
@@ -66,7 +68,6 @@ fun RepSyncNavHost(
                     navController.navigate(Screen.EditWorkout.createRoute(workoutId))
                 },
                 onStartWorkout = { workoutId ->
-                    // Phase 5: navigate to active workout
                     navController.navigate(Screen.ActiveWorkout.createRoute(workoutId))
                 },
             )
@@ -99,6 +100,7 @@ fun RepSyncNavHost(
                 onNavigateHome = {
                     navController.popBackStack(Screen.Home.route, inclusive = false)
                 },
+                activeWorkoutManager = activeWorkoutManager,
             )
         }
 
@@ -108,6 +110,7 @@ fun RepSyncNavHost(
                 onNavigateHome = {
                     navController.popBackStack(Screen.Home.route, inclusive = false)
                 },
+                activeWorkoutManager = activeWorkoutManager,
             )
         }
 
