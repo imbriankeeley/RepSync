@@ -1,159 +1,88 @@
-# WorkoutTracker iOS App
+# RepSync
 
-A premium iOS workout tracking application designed for intermediate to advanced fitness enthusiasts. The app focuses on efficient workout logging, template management, and progress tracking with a clean, native iOS interface.
+A simple, **offline-first** Android workout app. Log workouts, build templates, track progress—all on your device. No account required.
 
 ## Features
 
-- Quick start workout creation
-- Template-based workouts
-- Custom exercise creation
-- Exercise reordering within templates
-- Progress tracking with calendar integration
-- Offline functionality with cloud sync
-- Secure data storage with end-to-end encryption
-- Cross-device synchronization (iOS)
-
-## Technical Stack
-
-- **Platform:** iOS 15.0+
-- **Framework:** SwiftUI
-- **Architecture:** MVVM
-- **Persistence:** CoreData
-- **Cloud Services:** CloudKit
-- **Authentication:** Sign in with Apple, Email/Password
-- **Security:** CryptoKit, Keychain
-- **Testing:** XCTest
-
-## Project Structure
-
-```
-WorkoutTracker/
-├── App/                 # App entry point and delegates
-├── Features/           # Main feature modules
-├── Core/              # Core functionality and models
-├── UI/                # Reusable UI components
-└── Configuration/     # App configuration files
-```
+- **Guest-first** — Use the app immediately; optional local profile (name, avatar) only.
+- **Workout templates** — Create and save workouts with exercises and sets; start from a template anytime.
+- **Quick Workout** — Add exercises on the fly without a template.
+- **Calendar** — Month view with completed workouts; tap a day to see details, copy workouts to other days, or save a day’s workout as a template.
+- **Progress** — “Previous” weight/reps per exercise from your history.
+- **Local only** — All data stays on your device (Room/SQLite). No cloud, no sign-in in v1.
 
 ## Requirements
 
-- Xcode 14.0+
-- iOS 15.0+
-- Swift 5.5+
-- Apple Developer Account
+- **Android** only (no iOS in initial scope).
+- Min SDK 21+ (or 24+); target latest stable Android.
 
-## Setup Instructions
+## Building the app
 
-1. Clone the repository:
+### Prerequisites
 
-   ```bash
-   git clone [repository-url]
-   cd WorkoutTracker
-   ```
+- [Android Studio](https://developer.android.com/studio) (or Android SDK + Gradle).
+- JDK 17+.
 
-2. Install development certificates:
+### Build commands
 
-   - Open Xcode
-   - Sign in with your Apple Developer account
-   - Select your team in project settings
-   - Update bundle identifier if needed
-
-3. Configure CloudKit:
-
-   - Enable CloudKit in project capabilities
-   - Configure CloudKit container
-   - Set up CloudKit schema
-
-4. Install dependencies:
-
-   ```bash
-   # If using CocoaPods
-   pod install
-   ```
-
-5. Open the project:
-   ```bash
-   open WorkoutTracker.xcworkspace  # If using CocoaPods
-   # or
-   open WorkoutTracker.xcodeproj
-   ```
-
-## Development Guidelines
-
-### Code Style
-
-- Follow [Swift API Design Guidelines](https://swift.org/documentation/api-design-guidelines/)
-- Use SwiftLint for consistent code formatting
-- Implement unit tests for all business logic
-- Document public APIs using standard documentation comments
-
-### Architecture
-
-- Follow MVVM architecture pattern
-- Use Combine for reactive programming
-- Implement dependency injection
-- Keep views simple and focused
-- Use protocols for dependency inversion
-
-### Data Management
-
-- Implement offline-first approach
-- Handle sync conflicts gracefully
-- Use CoreData for local persistence
-- Encrypt sensitive data
-- Implement proper error handling
-
-### UI/UX Guidelines
-
-- Follow iOS Human Interface Guidelines
-- Support Dynamic Type
-- Implement dark mode
-- Ensure accessibility compliance
-- Use SF Symbols where appropriate
-
-## Testing
-
-### Running Tests
-
+**Debug (development):**
 ```bash
-# Run unit tests
-xcodebuild test -scheme WorkoutTracker -destination 'platform=iOS Simulator,name=iPhone 14'
+./gradlew assembleDebug
+```
+Output: `app/build/outputs/apk/debug/app-debug.apk`
+
+**Release (distribution):**
+```bash
+./gradlew assembleRelease
+```
+Output: `app/build/outputs/apk/release/app-release.apk`
+
+For a signed release, configure signing in `app/build.gradle` (see [Android docs](https://developer.android.com/studio/publish/app-signing)). Do not commit keystores or passwords.
+
+### Run on a device
+
+Install the debug APK:
+```bash
+./gradlew installDebug
+```
+Or open the project in Android Studio and run on an emulator or connected device.
+
+## Distribution via Obtainium
+
+[Obtainium](https://github.com/ImranR98/Obtainium) can install and update the app from GitHub Releases.
+
+**For users:**
+
+1. Install [Obtainium](https://github.com/ImranR98/Obtainium).
+2. Add source: this repo’s URL (e.g. `https://github.com/<user>/RepSync`).
+3. Obtainium will use the latest release and its APK (or AAB) asset.
+4. Install or update from there.
+
+**For maintainers (publishing a release):**
+
+1. Build the release APK: `./gradlew assembleRelease`.
+2. Create a new **GitHub Release** (tag, e.g. `v1.0.0`).
+3. Attach `app/build/outputs/apk/release/app-release.apk` (or the signed APK) to the release.
+4. Obtainium will pick up the new release and APK for users who added this repo.
+
+## Repo structure
+
+```
+RepSync/
+├── docs/
+│   └── plan.md             # Full product and technical plan
+├── prompts.md               # Phased prompts for implementation (e.g. Claude Code)
+├── assets/
+│   ├── repSyncLogo.png     # App logo
+│   └── references/         # Design reference screens
+├── app/                     # Android app module
+├── build.gradle
+└── settings.gradle
 ```
 
-### Test Coverage
-
-- Unit tests for models and view models
-- Integration tests for services
-- UI tests for critical user flows
-- Performance tests for sync operations
-
-## Deployment
-
-### App Store Submission
-
-1. Configure app signing
-2. Update version and build numbers
-3. Create app store screenshots
-4. Complete app privacy details
-5. Submit for review
-
-### Beta Testing
-
-- Configure TestFlight
-- Distribute to internal testers
-- Collect and address feedback
-
-## Support and Documentation
-
-- [API Documentation](docs/api.md)
-- [Architecture Overview](docs/architecture.md)
-- [User Guide](docs/user-guide.md)
-- [Contributing Guidelines](CONTRIBUTING.md)
+- **Spec:** See [docs/plan.md](docs/plan.md) for the single source of truth (flows, data model, UI, distribution).
+- **Implementing from scratch:** Use [prompts.md](prompts.md) for step-by-step prompts keyed to the plan.
 
 ## License
 
-This project is proprietary software. All rights reserved.
-
-## Contact
-
-For support or inquiries, please contact [support@workouttracker.com]
+See [LICENSE](LICENSE) in this repo, if present.
