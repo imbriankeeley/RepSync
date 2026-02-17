@@ -18,7 +18,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,8 +29,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -40,13 +37,11 @@ import com.repsync.app.ui.theme.BackgroundCard
 import com.repsync.app.ui.theme.BackgroundCardElevated
 import com.repsync.app.ui.theme.BackgroundPrimary
 import com.repsync.app.ui.theme.DestructiveRed
-import com.repsync.app.ui.theme.InputBackground
 import com.repsync.app.ui.theme.PrimaryGreen
 import com.repsync.app.ui.theme.TextOnDark
 import com.repsync.app.ui.theme.TextOnDarkSecondary
 import com.repsync.app.ui.viewmodel.ExerciseUiModel
 import com.repsync.app.ui.viewmodel.NewWorkoutViewModel
-import com.repsync.app.ui.viewmodel.SetUiModel
 
 @Composable
 fun NewWorkoutScreen(
@@ -112,12 +107,6 @@ fun NewWorkoutScreen(
                     },
                     onAddSet = { viewModel.addSet(exercise.id) },
                     onRemoveSet = { setIndex -> viewModel.removeSet(exercise.id, setIndex) },
-                    onSetWeightChange = { setIndex, weight ->
-                        viewModel.onSetWeightChange(exercise.id, setIndex, weight)
-                    },
-                    onSetRepsChange = { setIndex, reps ->
-                        viewModel.onSetRepsChange(exercise.id, setIndex, reps)
-                    },
                     onRemoveExercise = { viewModel.removeExercise(exercise.id) },
                 )
                 Spacer(modifier = Modifier.height(12.dp))
@@ -249,8 +238,6 @@ private fun ExerciseCard(
     onExerciseNameChange: (String) -> Unit,
     onAddSet: () -> Unit,
     onRemoveSet: (Int) -> Unit,
-    onSetWeightChange: (Int, String) -> Unit,
-    onSetRepsChange: (Int, String) -> Unit,
     onRemoveExercise: () -> Unit,
 ) {
     Column(
@@ -292,58 +279,52 @@ private fun ExerciseCard(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Table header
+        // Sets display — compact row of set badges
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "Set",
-                modifier = Modifier.width(40.dp),
+                text = "Sets",
                 color = TextOnDarkSecondary,
                 style = MaterialTheme.typography.titleSmall,
-                textAlign = TextAlign.Center,
             )
-            Text(
-                text = "Previous",
-                modifier = Modifier.weight(1f),
-                color = TextOnDarkSecondary,
-                style = MaterialTheme.typography.titleSmall,
-                textAlign = TextAlign.Center,
-            )
-            Text(
-                text = "+lbs",
-                modifier = Modifier.weight(1f),
-                color = TextOnDarkSecondary,
-                style = MaterialTheme.typography.titleSmall,
-                textAlign = TextAlign.Center,
-            )
-            Text(
-                text = "Reps",
-                modifier = Modifier.weight(1f),
-                color = TextOnDarkSecondary,
-                style = MaterialTheme.typography.titleSmall,
-                textAlign = TextAlign.Center,
-            )
-        }
+            Spacer(modifier = Modifier.width(12.dp))
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Set rows
-        exercise.sets.forEachIndexed { index, set ->
-            SetRow(
-                setNumber = index + 1,
-                set = set,
-                onWeightChange = { onSetWeightChange(index, it) },
-                onRepsChange = { onSetRepsChange(index, it) },
-                onRemove = if (exercise.sets.size > 1) {
-                    { onRemoveSet(index) }
-                } else null,
-            )
-            if (index < exercise.sets.size - 1) {
-                Spacer(modifier = Modifier.height(6.dp))
+            // Set number badges in a flowing row
+            exercise.sets.forEachIndexed { index, _ ->
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(BackgroundCardElevated)
+                        .then(
+                            if (exercise.sets.size > 1) {
+                                Modifier.clickable { onRemoveSet(index) }
+                            } else Modifier
+                        ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "${index + 1}",
+                        color = if (exercise.sets.size > 1) DestructiveRed else TextOnDarkSecondary,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                    )
+                }
+                Spacer(modifier = Modifier.width(6.dp))
             }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            // Set count label
+            Text(
+                text = "${exercise.sets.size} total",
+                color = TextOnDarkSecondary.copy(alpha = 0.6f),
+                style = MaterialTheme.typography.bodySmall,
+            )
         }
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -364,122 +345,5 @@ private fun ExerciseCard(
                 style = MaterialTheme.typography.labelMedium,
             )
         }
-    }
-}
-
-@Composable
-private fun SetRow(
-    setNumber: Int,
-    set: SetUiModel,
-    onWeightChange: (String) -> Unit,
-    onRepsChange: (String) -> Unit,
-    onRemove: (() -> Unit)?,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        // Set number badge (tappable to remove when more than 1 set)
-        Box(
-            modifier = Modifier
-                .size(28.dp)
-                .clip(CircleShape)
-                .background(BackgroundCardElevated)
-                .then(if (onRemove != null) Modifier.clickable { onRemove() } else Modifier),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = "$setNumber",
-                color = if (onRemove != null) DestructiveRed else TextOnDarkSecondary,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium,
-            )
-        }
-        Spacer(modifier = Modifier.width(12.dp))
-
-        // Previous
-        Box(
-            modifier = Modifier.weight(1f),
-            contentAlignment = Alignment.Center,
-        ) {
-            val previousText = set.previous?.let { prev ->
-                val w = prev.weight?.let { formatWeightDisplay(it) } ?: "-"
-                val r = prev.reps?.toString() ?: "-"
-                "$w x $r"
-            } ?: "-"
-            Text(
-                text = previousText,
-                color = TextOnDarkSecondary,
-                style = MaterialTheme.typography.bodyMedium,
-                textAlign = TextAlign.Center,
-            )
-        }
-
-        // Weight input
-        SetInputField(
-            value = set.weight,
-            placeholder = "+lbs",
-            onValueChange = onWeightChange,
-            modifier = Modifier.weight(1f),
-            keyboardType = KeyboardType.Decimal,
-        )
-
-        // Reps input
-        SetInputField(
-            value = set.reps,
-            placeholder = "Reps",
-            onValueChange = onRepsChange,
-            modifier = Modifier.weight(1f),
-            keyboardType = KeyboardType.Number,
-        )
-    }
-}
-
-@Composable
-private fun SetInputField(
-    value: String,
-    placeholder: String,
-    onValueChange: (String) -> Unit,
-    modifier: Modifier = Modifier,
-    keyboardType: KeyboardType = KeyboardType.Number,
-) {
-    BasicTextField(
-        value = value,
-        onValueChange = onValueChange,
-        modifier = modifier
-            .padding(horizontal = 4.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .background(InputBackground)
-            .padding(horizontal = 8.dp, vertical = 8.dp),
-        textStyle = MaterialTheme.typography.bodyMedium.copy(
-            color = TextOnDark,
-            textAlign = TextAlign.Center,
-        ),
-        singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-        cursorBrush = SolidColor(PrimaryGreen),
-        decorationBox = { innerTextField ->
-            Box(contentAlignment = Alignment.Center) {
-                if (value.isEmpty()) {
-                    Text(
-                        text = placeholder,
-                        color = TextOnDarkSecondary.copy(alpha = 0.5f),
-                        style = MaterialTheme.typography.bodyMedium,
-                        textAlign = TextAlign.Center,
-                    )
-                }
-                innerTextField()
-            }
-        },
-    )
-}
-
-private fun formatWeightDisplay(weight: Double): String {
-    return if (weight == weight.toLong().toDouble()) {
-        weight.toLong().toString()
-    } else {
-        weight.toString()
     }
 }

@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import com.repsync.app.data.RepSyncDatabase
 import com.repsync.app.data.entity.ExerciseEntity
 import com.repsync.app.data.entity.ExerciseSetEntity
-import com.repsync.app.data.entity.PreviousSetResult
 import com.repsync.app.data.entity.WorkoutEntity
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,9 +14,6 @@ import kotlinx.coroutines.launch
 
 data class SetUiModel(
     val orderIndex: Int,
-    val weight: String = "",
-    val reps: String = "",
-    val previous: PreviousSetResult? = null,
 )
 
 data class ExerciseUiModel(
@@ -60,20 +56,12 @@ class NewWorkoutViewModel(application: Application) : AndroidViewModel(applicati
             val exercises = workoutWithExercises.exercises
                 .sortedBy { it.exercise.orderIndex }
                 .map { exerciseWithSets ->
-                    val previousSets = completedWorkoutDao.getAllPreviousSetsForExercise(
-                        exerciseWithSets.exercise.name
-                    )
                     ExerciseUiModel(
                         name = exerciseWithSets.exercise.name,
                         sets = exerciseWithSets.sets
                             .sortedBy { it.orderIndex }
-                            .mapIndexed { index, set ->
-                                SetUiModel(
-                                    orderIndex = set.orderIndex,
-                                    weight = set.weight?.let { formatWeight(it) } ?: "",
-                                    reps = set.reps?.toString() ?: "",
-                                    previous = previousSets.getOrNull(index),
-                                )
+                            .map { set ->
+                                SetUiModel(orderIndex = set.orderIndex)
                             }.ifEmpty {
                                 listOf(SetUiModel(orderIndex = 0))
                             },
@@ -113,29 +101,6 @@ class NewWorkoutViewModel(application: Application) : AndroidViewModel(applicati
                 else exercise
             }
         )
-        // Load previous data when exercise name changes
-        loadPreviousData(exerciseId, name)
-    }
-
-    private fun loadPreviousData(exerciseId: String, exerciseName: String) {
-        if (exerciseName.isBlank()) return
-        viewModelScope.launch {
-            val previousSets = completedWorkoutDao.getAllPreviousSetsForExercise(exerciseName)
-            if (previousSets.isNotEmpty()) {
-                val current = _uiState.value
-                _uiState.value = current.copy(
-                    exercises = current.exercises.map { exercise ->
-                        if (exercise.id == exerciseId) {
-                            exercise.copy(
-                                sets = exercise.sets.mapIndexed { index, set ->
-                                    set.copy(previous = previousSets.getOrNull(index))
-                                }
-                            )
-                        } else exercise
-                    }
-                )
-            }
-        }
     }
 
     fun addSet(exerciseId: String) {
@@ -144,38 +109,12 @@ class NewWorkoutViewModel(application: Application) : AndroidViewModel(applicati
             exercises = current.exercises.map { exercise ->
                 if (exercise.id == exerciseId) {
                     val newIndex = exercise.sets.size
-                    // Try to get previous data for the new set
                     exercise.copy(
                         sets = exercise.sets + SetUiModel(orderIndex = newIndex)
                     )
                 } else exercise
             }
         )
-        // Load previous for the newly added set
-        val exercise = _uiState.value.exercises.find { it.id == exerciseId }
-        if (exercise != null && exercise.name.isNotBlank()) {
-            viewModelScope.launch {
-                val newSetIndex = exercise.sets.size - 1
-                val previous = completedWorkoutDao.getPreviousSetForExercise(
-                    exercise.name, newSetIndex
-                )
-                if (previous != null) {
-                    val updated = _uiState.value
-                    _uiState.value = updated.copy(
-                        exercises = updated.exercises.map { ex ->
-                            if (ex.id == exerciseId) {
-                                ex.copy(
-                                    sets = ex.sets.mapIndexed { index, set ->
-                                        if (index == newSetIndex) set.copy(previous = previous)
-                                        else set
-                                    }
-                                )
-                            } else ex
-                        }
-                    )
-                }
-            }
-        }
     }
 
     fun removeSet(exerciseId: String, setIndex: Int) {
@@ -186,30 +125,6 @@ class NewWorkoutViewModel(application: Application) : AndroidViewModel(applicati
                     exercise.copy(
                         sets = exercise.sets.filterIndexed { index, _ -> index != setIndex }
                             .mapIndexed { index, set -> set.copy(orderIndex = index) }
-                    )
-                } else exercise
-            }
-        )
-    }
-
-    fun onSetWeightChange(exerciseId: String, setIndex: Int, weight: String) {
-        updateSet(exerciseId, setIndex) { it.copy(weight = weight) }
-    }
-
-    fun onSetRepsChange(exerciseId: String, setIndex: Int, reps: String) {
-        updateSet(exerciseId, setIndex) { it.copy(reps = reps) }
-    }
-
-    private fun updateSet(exerciseId: String, setIndex: Int, transform: (SetUiModel) -> SetUiModel) {
-        val current = _uiState.value
-        _uiState.value = current.copy(
-            exercises = current.exercises.map { exercise ->
-                if (exercise.id == exerciseId) {
-                    exercise.copy(
-                        sets = exercise.sets.mapIndexed { index, set ->
-                            if (index == setIndex) transform(set)
-                            else set
-                        }
                     )
                 } else exercise
             }
@@ -251,12 +166,12 @@ class NewWorkoutViewModel(application: Application) : AndroidViewModel(applicati
                     orderIndex = exerciseIndex,
                 )
             )
-            val sets = exercise.sets.mapIndexed { setIndex, set ->
+            val sets = exercise.sets.mapIndexed { setIndex, _ ->
                 ExerciseSetEntity(
                     exerciseId = exerciseId,
                     orderIndex = setIndex,
-                    weight = set.weight.toDoubleOrNull(),
-                    reps = set.reps.toIntOrNull(),
+                    weight = null,
+                    reps = null,
                 )
             }
             if (sets.isNotEmpty()) {
@@ -265,11 +180,4 @@ class NewWorkoutViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
-    private fun formatWeight(weight: Double): String {
-        return if (weight == weight.toLong().toDouble()) {
-            weight.toLong().toString()
-        } else {
-            weight.toString()
-        }
-    }
 }

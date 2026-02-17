@@ -28,7 +28,7 @@ fun ProfileAvatar(
     size: Dp,
     iconSize: Dp = size * 0.6f,
 ) {
-    val bitmap = remember(avatarPath) {
+    val bitmap = remember(avatarPath, avatarPath?.let { File(it).lastModified() }) {
         avatarPath?.let { path ->
             val file = File(path)
             if (file.exists()) {
