@@ -106,8 +106,8 @@ fun HomeScreen(
             }
         }
 
-        // Bottom spacing — matches ProfileScreen's 16dp spacer
-        Spacer(modifier = Modifier.height(16.dp))
+        // Bottom spacing before nav bar
+        Spacer(modifier = Modifier.height(4.dp))
     }
 }
 

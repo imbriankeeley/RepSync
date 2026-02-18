@@ -35,24 +35,24 @@ import java.time.LocalDate
 
 /**
  * Curated list of funny workout / motivational GIF URLs.
- * Uses direct media links for reliability.
+ * Uses Giphy CDN direct links. IDs sourced from Giphy explore pages.
  */
 private val workoutGifs = listOf(
-    "https://media.giphy.com/media/3oKIPavRPgJYaNI97W/giphy.gif",
-    "https://media.giphy.com/media/ZaKcIYMjNYMKjbBp1o/giphy.gif",
-    "https://media.giphy.com/media/l0HUbtILos6CfpevC/giphy.gif",
-    "https://media.giphy.com/media/YqbByMOb8cPbMzgLbf/giphy.gif",
-    "https://media.giphy.com/media/5GoVLqeAOo6PK/giphy.gif",
-    "https://media.giphy.com/media/KzM1lAfJjCWNq/giphy.gif",
-    "https://media.giphy.com/media/WUlplcMpOCEmTGBtBW/giphy.gif",
-    "https://media.giphy.com/media/Vccpm1O9gV1g4/giphy.gif",
-    "https://media.giphy.com/media/3ohhwoWSCtJzznXbuo/giphy.gif",
-    "https://media.giphy.com/media/l46CyJmS9KUbokzsI/giphy.gif",
-    "https://media.giphy.com/media/j3IxJRLNLZz9sXR7ZA/giphy.gif",
-    "https://media.giphy.com/media/xUOxfoA5ffZ8xoTDC8/giphy.gif",
-    "https://media.giphy.com/media/xT0xeuOy2Fcl9vDGiA/giphy.gif",
-    "https://media.giphy.com/media/CjmvTCZf2U3p09Cn0h/giphy.gif",
-    "https://media.giphy.com/media/kaBmqpJMOEJGM/giphy.gif",
+    "https://media.giphy.com/media/13beCEg2qPMmIg/giphy.gif",      // weight loss
+    "https://media.giphy.com/media/nrPIcERVPqDRUwg2Uy/giphy.gif",  // lets go win
+    "https://media.giphy.com/media/3oz8xDnHOUs1Zmgcyk/giphy.gif",  // weakest link
+    "https://media.giphy.com/media/d4ntTSU1XZkUT82ZrQ/giphy.gif",  // charge fitness
+    "https://media.giphy.com/media/12b5KCfktNCF2w/giphy.gif",      // endorphins
+    "https://media.giphy.com/media/Ft62PpMu4mzpm/giphy.gif",       // motivation
+    "https://media.giphy.com/media/rdndaPLEGlIFSjlgBr/giphy.gif",  // fitness workout
+    "https://media.giphy.com/media/13qNgjjIAYSwLe/giphy.gif",      // fitness
+    "https://media.giphy.com/media/O7zIucUek2chfVq4Q8/giphy.gif",  // good morning
+    "https://media.giphy.com/media/RdccMi7IQTTS7LFU4f/giphy.gif",  // fitness alpha
+    "https://media.giphy.com/media/Jl1Q9APSZVA3ATKrdM/giphy.gif",  // sport what
+    "https://media.giphy.com/media/0fkgnzfR4rcZyjzmGE/giphy.gif",  // workout flip
+    "https://media.giphy.com/media/GAswW56INoritODhiB/giphy.gif",  // working out cat
+    "https://media.giphy.com/media/yySKmiRgFgBfAG5kzC/giphy.gif",  // cycling
+    "https://media.giphy.com/media/y8VyT9Sz34uIvz2Mq7/giphy.gif",  // cute workout
 )
 
 /**

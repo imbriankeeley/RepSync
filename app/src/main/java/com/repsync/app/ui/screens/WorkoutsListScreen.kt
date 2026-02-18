@@ -40,6 +40,7 @@ import com.repsync.app.ui.theme.BackgroundCard
 import com.repsync.app.ui.theme.BackgroundCardElevated
 import com.repsync.app.ui.theme.BackgroundPrimary
 import com.repsync.app.ui.theme.BackgroundSurface
+import com.repsync.app.ui.theme.DestructiveRed
 import com.repsync.app.ui.theme.Divider
 import com.repsync.app.ui.theme.InputBackground
 import com.repsync.app.ui.theme.PrimaryGreen
@@ -155,6 +156,7 @@ fun WorkoutsListScreen(
                     onDismiss = viewModel::dismissWorkoutDetail,
                     onStartWorkout = { onStartWorkout(workout.workout.id) },
                     onEditWorkout = { onNavigateToEditWorkout(workout.workout.id) },
+                    onDeleteWorkout = { viewModel.deleteWorkout(workout.workout) },
                 )
             }
         }
@@ -288,6 +290,7 @@ private fun WorkoutDetailOverlay(
     onDismiss: () -> Unit,
     onStartWorkout: () -> Unit,
     onEditWorkout: () -> Unit,
+    onDeleteWorkout: () -> Unit,
 ) {
     // Semi-transparent background
     Box(
@@ -406,6 +409,25 @@ private fun WorkoutDetailOverlay(
                 Text(
                     text = "Edit Workout",
                     color = TextOnDarkSecondary,
+                    style = MaterialTheme.typography.labelMedium,
+                )
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Delete button
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(44.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(DestructiveRed)
+                    .clickable { onDeleteWorkout() },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = "Delete Workout",
+                    color = TextOnDark,
                     style = MaterialTheme.typography.labelMedium,
                 )
             }
