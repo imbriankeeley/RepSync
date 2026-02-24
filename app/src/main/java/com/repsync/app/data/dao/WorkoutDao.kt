@@ -54,7 +54,7 @@ interface WorkoutDao {
     @Query("DELETE FROM exercise_sets WHERE exerciseId = :exerciseId")
     suspend fun deleteSetsByExerciseId(exerciseId: Long)
 
-    @Query("SELECT * FROM workouts ORDER BY createdAt DESC")
+    @Query("SELECT * FROM workouts ORDER BY orderIndex ASC")
     fun getAllWorkouts(): Flow<List<WorkoutEntity>>
 
     @Query("SELECT * FROM workouts WHERE id = :id")
@@ -65,9 +65,15 @@ interface WorkoutDao {
     suspend fun getWorkoutWithExercises(id: Long): WorkoutWithExercises?
 
     @Transaction
-    @Query("SELECT * FROM workouts ORDER BY createdAt DESC")
+    @Query("SELECT * FROM workouts ORDER BY orderIndex ASC")
     fun getAllWorkoutsWithExercises(): Flow<List<WorkoutWithExercises>>
 
-    @Query("SELECT * FROM workouts WHERE name LIKE '%' || :query || '%' ORDER BY createdAt DESC")
+    @Query("SELECT * FROM workouts WHERE name LIKE '%' || :query || '%' ORDER BY orderIndex ASC")
     fun searchWorkouts(query: String): Flow<List<WorkoutEntity>>
+
+    @Query("UPDATE workouts SET orderIndex = :orderIndex WHERE id = :id")
+    suspend fun updateWorkoutOrder(id: Long, orderIndex: Int)
+
+    @Query("SELECT COUNT(*) FROM workouts")
+    suspend fun getWorkoutCount(): Int
 }
