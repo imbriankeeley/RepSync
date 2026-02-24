@@ -71,4 +71,19 @@ class WorkoutsListViewModel(application: Application) : AndroidViewModel(applica
             _uiState.value = _uiState.value.copy(selectedWorkout = null)
         }
     }
+
+    fun moveWorkout(fromIndex: Int, toIndex: Int) {
+        val currentWorkouts = _uiState.value.workouts.toMutableList()
+        val item = currentWorkouts.removeAt(fromIndex)
+        currentWorkouts.add(toIndex, item)
+        _uiState.value = _uiState.value.copy(workouts = currentWorkouts)
+    }
+
+    fun saveWorkoutOrder() {
+        viewModelScope.launch {
+            _uiState.value.workouts.forEachIndexed { index, workoutWithExercises ->
+                workoutDao.updateWorkoutOrder(workoutWithExercises.workout.id, index)
+            }
+        }
+    }
 }
