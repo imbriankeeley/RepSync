@@ -9,6 +9,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import android.net.Uri
 import com.repsync.app.ui.screens.ActiveWorkoutScreen
+import com.repsync.app.ui.screens.BodyweightEntriesScreen
 import com.repsync.app.ui.screens.DayViewScreen
 import com.repsync.app.ui.screens.EditProfileScreen
 import com.repsync.app.ui.screens.ExerciseHistoryScreen
@@ -51,6 +52,15 @@ fun RepSyncNavHost(
                 onNavigateToEditProfile = {
                     navController.navigate(Screen.EditProfile.route)
                 },
+                onNavigateToBodyweightEntries = {
+                    navController.navigate(Screen.BodyweightEntries.route)
+                },
+            )
+        }
+
+        composable(Screen.BodyweightEntries.route) {
+            BodyweightEntriesScreen(
+                onNavigateBack = { navController.popBackStack() },
             )
         }
 
