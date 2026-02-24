@@ -31,6 +31,7 @@ data class ProfileUiState(
     val displayName: String? = null,
     val avatarPath: String? = null,
     val completedWorkoutCount: Int = 0,
+    val currentStreak: Int = 0,
     val bodyweightEntries: List<BodyweightEntryEntity> = emptyList(),
     val bodyweightChartData: List<ChartDataPoint> = emptyList(),
     val latestBodyweight: Double? = null,
@@ -58,12 +59,16 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     private val _uiState = MutableStateFlow(ProfileUiState())
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
 
+    private var cachedWorkoutDates: Set<LocalDate> = emptySet()
+    private var cachedScheduledDays: Set<DayOfWeek> = emptySet()
+
     init {
         observeProfile()
         observeWorkoutCount()
         observeBodyweight()
         observeReminderPrefs()
         observeWorkoutDays()
+        observeStreakData()
     }
 
     private fun observeProfile() {
@@ -201,6 +206,70 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             bodyweightDao.delete(entry)
         }
+    }
+
+    private fun observeStreakData() {
+        viewModelScope.launch {
+            completedWorkoutDao.getDatesWithCompletedWorkouts().collect { dateStrings ->
+                val dates = dateStrings.mapNotNull { str ->
+                    runCatching { LocalDate.parse(str) }.getOrNull()
+                }.toSet()
+                cachedWorkoutDates = dates
+                _uiState.value = _uiState.value.copy(
+                    currentStreak = calculateStreak(dates, cachedScheduledDays),
+                )
+            }
+        }
+        viewModelScope.launch {
+            workoutDaysPrefs.days.collect { days ->
+                cachedScheduledDays = days
+                _uiState.value = _uiState.value.copy(
+                    currentStreak = calculateStreak(cachedWorkoutDates, days),
+                )
+            }
+        }
+    }
+
+    private fun calculateStreak(dates: Set<LocalDate>, scheduledDays: Set<DayOfWeek>): Int {
+        if (dates.isEmpty()) return 0
+        val today = LocalDate.now()
+
+        if (scheduledDays.isEmpty()) {
+            var checkDate = if (dates.contains(today)) today else today.minusDays(1)
+            if (!dates.contains(checkDate)) return 0
+            var streak = 0
+            while (dates.contains(checkDate)) {
+                streak++
+                checkDate = checkDate.minusDays(1)
+            }
+            return streak
+        }
+
+        var checkDate = today
+        if (!dates.contains(checkDate)) {
+            checkDate = checkDate.minusDays(1)
+        }
+
+        var streak = 0
+        while (true) {
+            val isScheduled = scheduledDays.contains(checkDate.dayOfWeek)
+            val workedOut = dates.contains(checkDate)
+
+            if (isScheduled) {
+                if (workedOut) {
+                    streak++
+                    checkDate = checkDate.minusDays(1)
+                } else {
+                    break
+                }
+            } else {
+                if (workedOut) {
+                    streak++
+                }
+                checkDate = checkDate.minusDays(1)
+            }
+        }
+        return streak
     }
 
     private fun observeWorkoutDays() {
