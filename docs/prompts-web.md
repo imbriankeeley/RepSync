@@ -13,9 +13,9 @@ Same as the Android app. All design references live under **`assets/`**:
 | Asset | Path | Use for |
 |-------|------|--------|
 | App logo | `assets/repSyncLogo.png` | PWA icons, in-app branding |
-| Screen mocks | `assets/references/IMG_1505.PNG` through `assets/references/IMG_1538.PNG` | Home, Workouts, New Workout, active workout, Quick Workout, Profile, Calendar, dialogs |
+| Screen mocks | `assets/references/IMG_1505.PNG` through `assets/references/IMG_1538.PNG` | All screens: Home, Workouts, New Workout, active workout, Quick Workout, Profile, Calendar, dialogs |
 
-- **Theme and layout:** Match colors, spacing, rounded corners, and typography to the reference screens. Use CSS variables; touch targets ≥ 44px for iOS.
+- **Theme and layout:** Match colors, spacing, rounded corners, and typography to the reference screens. Use CSS variables; touch targets >= 44px for iOS.
 - **plan-web.md Section 1** lists exact color values; the PNGs show layout and hierarchy.
 
 ---
@@ -24,9 +24,9 @@ Same as the Android app. All design references live under **`assets/`**:
 
 1. Start with **Phase 1** and work in order; later phases depend on earlier ones.
 2. Before each phase, ensure the repo has the structure and files from previous phases.
-3. **For each phase, reference the assets listed in that phase’s prompt** — open the relevant images to match layout and theme.
+3. **For each phase, reference the assets listed in that phase's prompt** — open the relevant images to match layout and theme.
 4. After each phase, verify the checklist items for that phase before moving on.
-5. Choose one stack (e.g. React + Vite or Vue + Vite) in Phase 1 and use it consistently.
+5. Use React + Vite + TypeScript as the stack.
 
 ---
 
@@ -35,34 +35,37 @@ Same as the Android app. All design references live under **`assets/`**:
 **Paste this prompt:**
 
 ```
-I'm building RepSync Web — a PWA that is functionally identical to the Android RepSync workout app. Use docs/plan-web.md as the single source of truth. The Android spec is in docs/plan.md for flow reference; plan-web.md defines platform (web, IndexedDB, PWA, iOS Add to Home Screen).
+I'm building RepSync Web — a PWA that is functionally identical to the Android RepSync workout app. Use docs/plan-web.md as the single source of truth. The Android app is in the app/ directory for reference.
 
-Design assets to reference for this phase: assets/repSyncLogo.png (logo), and assets/references/IMG_1505.PNG through IMG_1538.PNG (all screen mocks for theme, colors, and layout). Open these and match theme/layout to them.
+Design assets to reference: assets/repSyncLogo.png (logo), and assets/references/IMG_1505.PNG through IMG_1538.PNG (all screen mocks for theme, colors, and layout). Open these and match theme/layout to them.
 
 Do Phase 1 only:
 
-1. Create the web project (e.g. Vite + React + TypeScript, or Vite + Vue + TypeScript — choose one and state which). Place it in a web/ folder (or as specified in plan-web.md Section 10). No backend; static build only.
+1. Create the web project using Vite + React + TypeScript. Place it in a web/ folder (plan-web.md Section 11). No backend; static build only.
 
-2. Define the theme in CSS to match the design assets (plan-web.md Section 1, same as Android):
-   - Background: dark charcoal / near-black (#1a1a1a or similar).
-   - Cards & inputs: light grey rounded rectangles; text on cards dark grey/black.
-   - Primary actions: muted sage/olive green (#8DAF8E, #7E9D7C) — e.g. "Add Exercise", "Finish Workout", "Quick Go", "Start Workout", checkmarks.
-   - Destructive/cancel: muted red/pink for "Cancel" and header "X".
-   - Text on dark: white or very light grey.
-   - Corners: 12–16px for cards, 8px for buttons/inputs; typography: clean sans-serif, clear hierarchy.
-   Use CSS variables. Ensure touch targets are at least 44px for iOS. Support safe-area-inset for notched devices.
+2. Define the theme in CSS variables to match the design assets (plan-web.md Section 1):
+   - Background: pure black #000000 (outer), dark charcoal #1A1A1A (surface), #2C2C2E (cards).
+   - Elevated cards: #3A3A3C. Input backgrounds: #48484A.
+   - Primary actions: muted sage green #8DAF8E, dark variant #7E9D7C.
+   - Destructive: muted rose #C48B8B.
+   - Checkmark green: #4CAF50.
+   - Text on dark: white #FFFFFF, secondary #B0B0B0.
+   - Corners: 16px cards, 12px buttons, 8px inputs, full-round for circular badges.
+   Use CSS variables. Touch targets at least 44px. Support safe-area-inset for notched devices.
 
 3. PWA setup:
-   - Web App Manifest: name, short_name, start_url, display "standalone", theme_color and background_color matching the app, icons (generate from assets/repSyncLogo.png — e.g. 192x192, 512x512, and 180x180 for Apple touch icon).
-   - Service worker: use vite-plugin-pwa (or equivalent) to generate; cache static assets so the app works offline after first load.
-   - In index.html: viewport, apple-mobile-web-app-capable, apple-mobile-web-app-status-bar-style, and <link rel="apple-touch-icon"> pointing to the 180x180 icon.
+   - Web App Manifest: name "RepSync", short_name "RepSync", start_url, display "standalone", theme_color and background_color matching #000000, icons (generate from assets/repSyncLogo.png — 192x192, 512x512, and 180x180 for Apple touch icon).
+   - Service worker: use vite-plugin-pwa; cache static assets for offline-first.
+   - In index.html: viewport with viewport-fit=cover, apple-mobile-web-app-capable, apple-mobile-web-app-status-bar-style, and <link rel="apple-touch-icon">.
 
-4. Add a minimal README in the web app folder (or root) with: one-line description (RepSync Web — iOS PWA), how to run dev (e.g. npm run dev), how to build (npm run build), and that iOS users can Add to Home Screen from Safari (details in a later phase).
+4. Set up React Router with routes matching plan-web.md Section 9. All can be placeholder pages for now.
 
-Do not implement any screens or data layer yet — only project skeleton, theme, and PWA shell. Confirm stack choice (React+Vite or Vue+Vite) in your reply.
+5. Call navigator.storage.persist() on app startup.
+
+Do not implement screens or data layer yet — only project skeleton, theme, routing stubs, and PWA shell.
 ```
 
-**Done when:** Project runs (npm run dev); theme matches design; manifest and service worker are in place; app is installable (Add to Home Screen works in Safari when served over HTTPS or localhost with flags). Logo used for PWA icons.
+**Done when:** Project runs (npm run dev); theme CSS variables match design; manifest and service worker work; all routes exist as stubs; app is installable via Add to Home Screen.
 
 ---
 
@@ -73,24 +76,36 @@ Do not implement any screens or data layer yet — only project skeleton, theme,
 ```
 RepSync Web — follow docs/plan-web.md. Phase 1 (project, theme, PWA shell) is done. Do Phase 2 only: local data layer with IndexedDB.
 
-No UI assets needed this phase (data/models only). Keep assets/references/ in mind for future screens.
+1. Add Dexie.js (or idb) and define the data model matching plan-web.md Section 4:
+   - Workout (template): id, name, createdAt, orderIndex.
+   - Exercise: id, name, workoutId, orderIndex.
+   - ExerciseSet: id, exerciseId, orderIndex.
+   - CompletedWorkout: id, name, date (yyyy-MM-dd string), startedAt, endedAt, isQuickWorkout, elapsedSeconds.
+   - CompletedExercise: id, completedWorkoutId, name, orderIndex.
+   - CompletedSet: id, completedExerciseId, orderIndex, weight (nullable number), reps (nullable number).
+   - UserProfile: id (always 1), displayName, avatarUri (data URL string), totalCompletedWorkouts.
+   - BodyweightEntry: id, date (yyyy-MM-dd string), weight (number).
 
-1. Add an IndexedDB wrapper (e.g. idb, Dexie, or similar) and define the same data model as the Android app (plan-web.md Section 4 = plan.md Section 4):
-   - Workout (template): id, name, createdAt, list of exercises (order preserved via orderIndex).
-   - Exercise: id, name, workoutId, orderIndex, list of sets.
-   - Set: id, exerciseId, orderIndex, previousWeight (optional), previousReps (optional), weight, reps.
-   - CompletedWorkout: id, name (or template id), date (calendar day), startedAt, endedAt (null if abandoned), list of exercises with sets and logged values. Support "Quick workout" via flag or naming (e.g. "Quick Workout" + date).
+2. Create a data service layer with methods for:
+   - CRUD for workouts, exercises, sets (templates).
+   - CRUD for completed workouts with nested exercises/sets.
+   - "Previous" query: given exercise name and set index, find the most recent completed set matching that exercise name and set index.
+   - getAllWorkouts ordered by orderIndex ASC.
+   - updateWorkoutOrder(id, orderIndex), getWorkoutCount().
+   - getDatesWithCompletedWorkouts() for calendar dots.
+   - getCompletedWorkoutsForDate(date) for day view.
+   - Exercise history: getCompletedSetsForExercise(name) for stats and chart.
+   - Bodyweight: insert, update, delete, getAllChronological, getLatest.
+   - UserProfile: get, update.
+   - Exercise name suggestions: getDistinctExerciseNames() from completed workouts.
+   - searchWorkouts(query).
 
-2. User model (plan-web.md Section 3): Guest by default. Optional local profile: display name, optional avatar (stored in IndexedDB, e.g. as data URL). No email/password or cloud.
+3. Add JSON export/import functions for all data (backup/restore).
 
-3. Provide a way to query "previous" for an exercise: last logged weight/reps for that exercise from CompletedWorkout history (e.g. "135 lb x 5"). Same behavior as Android.
-
-4. Single source of truth: all reads/writes go through this layer; UI will subscribe to it in later phases.
-
-Do not build UI screens yet. Ensure the project still builds and the data layer can be exercised (e.g. from dev console or a simple test page).
+All reads/writes go through this service layer. No UI yet.
 ```
 
-**Done when:** IndexedDB stores workouts, exercises, sets, completed workouts, and user profile; "previous" for an exercise can be queried; no cloud.
+**Done when:** IndexedDB stores all entities; service layer has all query methods; export/import works; project builds.
 
 ---
 
@@ -99,196 +114,265 @@ Do not build UI screens yet. Ensure the project still builds and the data layer 
 **Paste this prompt:**
 
 ```
-RepSync Web — docs/plan-web.md is the spec. Phases 1 and 2 are done. Do Phase 3 only: Home screen and app navigation. The flows must match the Android app (docs/plan.md Section 5.1).
+RepSync Web — docs/plan-web.md is the spec. Phases 1-2 are done. Do Phase 3 only: Home screen and navigation shell.
 
-Design assets to reference for this phase: assets/references/ — use the screens that show Home (calendar month view), "Workouts" and "Quick Go" buttons, and bottom nav (Home | Profile). Match layout, spacing, and green highlight on days with workouts.
+Design assets: assets/references/ — Home screen with calendar, buttons, and bottom nav.
 
-1. Set up client-side routing (e.g. React Router or Vue Router) so we have:
-   - Home (default route)
-   - Profile
-   - Bottom nav: Home | Profile (active tab indicated). Match design assets for layout. Use hash or history mode; ensure start_url works when launched from home screen.
+1. Bottom navigation bar: Home | Profile. Only visible on Home and Profile routes. Active tab indicated visually. Match dark theme.
 
-2. Home screen (plan-web.md Section 5.1 = plan.md 5.1):
-   - Calendar: month view (e.g. "October 2024"), arrows to change month. Days with at least one completed workout get a muted green highlight. Tapping a day should eventually open Day view (placeholder or simple alert for now; full Day view is Phase 8).
-   - Two main buttons: "Workouts" (navigate to Workouts list), "Quick Go" (navigate to Quick Workout — placeholder for now; Phase 6).
-   - Bottom nav: Home | Profile. Match theme (dark background, rounded cards, muted green for primary buttons) per assets/references/ and plan-web.md Section 1.
+2. Home screen (plan-web.md Section 5.1):
+   - Calendar: month view with month/year header and left/right arrows. Days with completed workouts (from IndexedDB) get a muted green dot. Today is visually distinct. Tapping a day navigates to /day/:date.
+   - Motivational GIF: Below calendar, show a random anime GIF from a curated list (use the same Giphy URLs from the Android app's MotivationalGif.kt — read that file for the URL list). Random selection on each page load. Fallback emoji combos if load fails. Use <img> tag.
+   - Two buttons: "Workouts" (navigate to /workouts), "Quick Go" (navigate to /quick-workout).
 
-3. Wire calendar to real data: days with completed workouts (from IndexedDB) must show the muted green highlight.
+3. Wire calendar to real data from IndexedDB.
 
-Implement only Home + bottom nav + navigation to Workouts and to a placeholder for Quick Go. Do not build Workouts list, Profile, or Active Workout yet.
+Only Home + bottom nav + navigation. Profile, Workouts, etc. remain stubs.
 ```
 
-**Done when:** Home shows calendar with green dots for days with workouts; Workouts and Quick Go buttons navigate correctly; bottom nav switches between Home and Profile (Profile can be a placeholder).
+**Done when:** Home shows calendar with green dots; GIF loads randomly; buttons navigate correctly; bottom nav works between Home and Profile stub.
 
 ---
 
-## Phase 4: Workouts List, Detail & New Workout (Templates)
+## Phase 4: Workouts List, Detail & New Workout
 
 **Paste this prompt:**
 
 ```
-RepSync Web — follow docs/plan-web.md. Phases 1–3 are done. Do Phase 4 only: Workouts list, workout detail, and New Workout (create/edit template). Flows must match Android (docs/plan.md Sections 5.2, 5.3).
+RepSync Web — docs/plan-web.md. Phases 1-3 done. Do Phase 4: Workouts list, workout detail, and New/Edit Workout.
 
-Design assets to reference for this phase: assets/references/ — use the screens for Workouts list (header, back, search, FAB "+"), workout detail (name, exercise list, "Start Workout" button, X), and New Workout (name input, exercise cards, Set | Previous | +lbs | Reps table, "Add Set", "Add Exercise" green button, Save). Match layout and styling.
+Design assets: assets/references/ — Workouts list, workout detail modal, and New Workout screens.
 
-1. Workouts list (plan-web.md Section 5.2):
-   - Header: Back (to Home), title "Workouts", optional search (filter by name).
-   - List: all saved workout templates from IndexedDB. Tap row → workout detail.
-   - FAB or "+" button: "New Workout" → go to New Workout screen.
+1. Workouts List (plan-web.md Section 5.2):
+   - Header: Back (to Home), "Workouts", search toggle.
+   - Search bar: animated visibility, filters by name. Disables reorder when active.
+   - Workout list items: name + exercise count. Ordered by orderIndex.
+   - Drag-to-reorder: Use @dnd-kit/core (or similar touch-friendly library). Long-press to initiate. Visual feedback: opacity 0.85 + shadow when dragging. Save orderIndex on drop. Disabled during search.
+   - Tap item → workout detail overlay (modal).
+   - FAB "+" → /workouts/new.
 
-2. Workout detail (modal or dedicated route):
-   - Workout name and list of exercises (e.g. "2 x Bench Press", "2 x Chest Press").
-   - Primary button: "Start Workout" (muted green). Close (X). Start Workout → Active Workout screen (placeholder for now; Phase 5).
+2. Workout detail overlay:
+   - Workout name, exercise list ("X x ExerciseName" sorted by orderIndex), "Start Workout" (green), "Edit Workout", close (X).
 
-3. New Workout screen (plan-web.md Section 5.3):
-   - Header: Back, "New Workout", "Save" (persists template to IndexedDB).
-   - Name: single input (e.g. "Name: Push").
-   - Exercises: per-exercise card with editable name; table Set | Previous | +lbs | Reps; "+ Add Set"; "Add Exercise" (green).
-   - Previous: show last logged weight/reps for that exercise from history (use "previous" query from Phase 2), if any.
-   - Save: store template in IndexedDB; user can start it later from Workouts.
+3. New Workout / Edit Workout (plan-web.md Section 5.3):
+   - Header: Back, "New Workout" / "Edit Workout", Save (disabled if no name or no exercises).
+   - Workout name input with "Name: " prefix.
+   - Exercise cards with drag-to-reorder (same library). Long-press to drag. Visual feedback matches workouts list.
+   - Each exercise: name field with autocomplete suggestions, delete (X), sets section with numbered badges (tap to remove if >1), "+ Add Set".
+   - "Add Exercise" button (green).
+   - Save: persist to IndexedDB. New workouts: orderIndex = current count.
+   - Edit: load existing workout, preserve orderIndex.
 
-Match the design assets in assets/references/ (Workouts + New Workout): dark theme, light grey cards, muted green primary actions, rounded corners. No cloud; all local.
+4. Exercise name autocomplete: query distinct exercise names from completed workout history.
+
+Match dark theme, rounded cards, muted green primary actions per design assets.
 ```
 
-**Done when:** Workouts list shows templates; search (optional) works; tap row → detail → Start Workout; New Workout allows name + exercises + sets with Previous and Save; data persists in IndexedDB.
+**Done when:** Workouts list with drag-to-reorder and search; detail overlay; New/Edit Workout with drag-to-reorder exercises, autocomplete, and save; all persists to IndexedDB.
 
 ---
 
-## Phase 5: Active Workout (from Template)
+## Phase 5: Active Workout & Quick Workout
 
 **Paste this prompt:**
 
 ```
-RepSync Web — docs/plan-web.md is the spec. Phases 1–4 are done. Do Phase 5 only: Active Workout screen when starting from a template. Flow must match Android (docs/plan.md Section 5.4).
+RepSync Web — docs/plan-web.md. Phases 1-4 done. Do Phase 5: Active Workout and Quick Workout.
 
-Design assets to reference for this phase: assets/references/ — use the screens for active workout (timer/stopwatch, workout name, X close), exercise/set table (Set, Previous, +lbs, Reps, "+ Add Set", checkmarks), "Add Exercise" and "Finish Workout" green buttons, and dialogs "Cancel Workout?" (Resume / Cancel) and "Finish Workout?" (Cancel / Finish). Match layout and destructive red/pink for Cancel/X.
+Design assets: assets/references/ — Active workout screen, set table, dialogs.
 
 1. Active Workout screen (plan-web.md Section 5.4):
-   - Header: Timer (e.g. stopwatch + "00:01"), workout name (e.g. "Chest Workout"), X (close) on the right.
-   - Timer: elapsed time. Optional: small control for rest/target duration — keep it simple.
-   - Body: one section per exercise with table Set, Previous, +lbs, Reps; "+ Add Set" per exercise; green checkmark when set completed (if in design).
-   - Actions: "Add Exercise" (green), "Finish Workout" (green, full-width).
-   - Close (X): dialog "Cancel Workout?" with Resume and Cancel. Cancel discards session (do not save). Resume returns to workout.
-   - Finish Workout: dialog "Finish Workout?" with Cancel and Finish. On Finish: save as CompletedWorkout for today, update profile workout count, return to Home.
+   - Header: stopwatch icon (tappable → rest timer dialog), elapsed timer, workout name, close X (destructive red).
+   - Rest timer banner: when active, shows countdown with "Rest" label and "Skip" button.
+   - Exercise cards with drag-to-reorder (same library as Phase 4):
+     - Exercise name field with autocomplete.
+     - Hourglass icon (⏳) next to name when name is not blank — tappable → /exercise-history/:name.
+     - Delete (X).
+     - Set table: Set# | Previous | +lbs | Reps | ✓
+       - Set number badge (tappable to remove if >1).
+       - Previous: shows last logged data from history (query by exercise name + set index). Shows current data in green when completed.
+       - Weight input: decimal keyboard, auto-select all text on focus.
+       - Reps input: number keyboard, auto-select all text on focus.
+       - Checkmark: toggle completed (green background when done).
+     - "+ Add Set".
+   - "Add Exercise" (green), "Finish Workout" (green, bold).
 
-2. Wire "Start Workout" from Workout detail (Phase 4) to this Active Workout screen with the selected template loaded. Pre-fill exercises/sets from template; "Previous" from history.
+2. Rest timer (plan-web.md Section 7):
+   - Dialog: presets (30s, 1m, 1m 30s, 2m) + custom seconds input. Set/Cancel.
+   - Countdown via setInterval. Updates banner every second.
+   - On complete: play alarm sound (new Audio with alarm sound or Web Audio API beep at max volume for 1200ms), vibrate (navigator.vibrate([400, 200, 400, 200, 400, 200, 400])), show browser Notification if permitted.
+   - "Skip" stops timer immediately.
+   - Timer persists duration preference in localStorage or IndexedDB.
 
-3. Optionally persist in-progress state (e.g. so closing the tab doesn’t lose the session); at minimum, Finish and Cancel must behave as above.
+3. Dialogs:
+   - Cancel Workout: "Cancel Workout?" → Resume / Cancel (destructive). Cancel discards session.
+   - Finish Workout: "Finish Workout?" → Cancel / Finish (green). On Finish: save CompletedWorkout with all exercises/sets/values, increment profile workout count, navigate to Home.
 
-Match the design assets in assets/references/ (active workout + dialogs): muted green primary actions, destructive red/pink for Cancel/X, dark background, rounded cards. All local.
+4. Quick Workout (/quick-workout):
+   - Same screen as Active Workout. Title "Quick Workout". No pre-filled exercises. isQuickWorkout = true on save.
+
+5. Wire "Start Workout" from workout detail to Active Workout with template loaded.
+
+6. Auto-select text on focus for weight/reps inputs: when field gains focus, select all text so typing replaces the value.
+
+Match design assets: dark theme, muted green actions, destructive red for cancel/X, rounded cards.
 ```
 
-**Done when:** Starting a template opens Active Workout with timer and exercise/set table; Add Set and Add Exercise work; Cancel Workout and Finish Workout dialogs work; on Finish, data saves to IndexedDB and profile count updates; user returns to Home.
+**Done when:** Active Workout works end-to-end with timer, rest timer (with sound/vibration), drag-to-reorder exercises, set completion, finish/cancel dialogs, exercise history link; Quick Workout works; data saves to IndexedDB.
 
 ---
 
-## Phase 6: Quick Workout
+## Phase 6: Profile & Edit Profile
 
 **Paste this prompt:**
 
 ```
-RepSync Web — follow docs/plan-web.md. Phases 1–5 are done. Do Phase 6 only: Quick Workout flow. Same as Android (docs/plan.md Section 5.5).
+RepSync Web — docs/plan-web.md. Phases 1-5 done. Do Phase 6: Profile and Edit Profile screens.
 
-Design assets to reference for this phase: same as Phase 5 — assets/references/ screens for active/Quick Workout (title "Quick Workout", same table and buttons). Reuse the same UI; only difference is no pre-filled exercises.
-
-1. Quick Workout (plan-web.md Section 5.5):
-   - Same UI as Active Workout; title "Quick Workout"; no pre-filled exercises; user adds all via "Add Exercise".
-   - Timer, Add Set, Add Exercise, Finish Workout, Close (X) with "Cancel Workout?" — same as Phase 5.
-   - On Finish: save as completed session for today (CompletedWorkout with Quick Workout naming/flag). Optionally "Save as template" in a later phase; for now just save.
-
-2. Wire the "Quick Go" button on Home to this Quick Workout screen (replace placeholder from Phase 3).
-
-3. Reuse the same Active Workout screen/logic; differentiate only by "from template" vs "quick" (no template).
-
-Match theme and behavior to plan-web.md and assets/references/. No cloud.
-```
-
-**Done when:** Quick Go opens Quick Workout; user can add exercises and sets, finish or cancel; completed Quick Workout is saved for today and appears in history/calendar.
-
----
-
-## Phase 7: Profile Screen
-
-**Paste this prompt:**
-
-```
-RepSync Web — docs/plan-web.md is the spec. Phases 1–6 are done. Do Phase 7 only: Profile screen. Same as Android (docs/plan.md Section 5.6).
-
-Design assets to reference for this phase: assets/references/ — use the Profile screen (header "Profile", profile card with icon/placeholder, "Guest" or name, "X Workouts" count, chevron to settings). Match layout and card style.
+Design assets: assets/references/ — Profile screen and settings.
 
 1. Profile screen (plan-web.md Section 5.6):
    - Header: "Profile".
-   - Card: profile icon (or placeholder), "Guest" or profile name, "X Workouts" (completed count from IndexedDB). Chevron (or tap) to open profile/settings.
-   - Bottom nav: Home | Profile (Profile selected when on this screen).
+   - Profile card: avatar (or placeholder icon), display name ("Guest" if not set), "X Workouts" count. Tappable → /profile/edit.
+   - Streak Badge: fire emoji + "X Day Streak". Only shown if streak > 0. Placed between profile card and bodyweight section.
+     - Streak calculation (same as Android): Without schedule, count consecutive days with workouts backward from today/yesterday. With schedule, scheduled days need workouts to continue streak, rest days never break it, bonus workouts on rest days count.
+   - Bodyweight section:
+     - Latest weight in green.
+     - Weight progression chart (green line with dots, grid lines, y-axis min/mid/max, x-axis first/last dates). Show when 2+ entries exist. Use recharts, chart.js, or custom SVG.
+     - "+" button → Add Bodyweight dialog (decimal input, Save/Cancel).
+     - "View All Entries" button → /bodyweight-entries.
+   - Bottom nav: Home | Profile (Profile selected).
 
-2. Profile/settings (plan-web.md Section 3): local only — display name, optional avatar (stored in IndexedDB). No email/password or cloud. "Create profile" / "Set up profile" only affects local identity.
+2. Edit Profile screen (plan-web.md Section 5.7):
+   - Header: Back, "Edit Profile", Save.
+   - Avatar: tappable → file input (accept image/*). Convert to data URL, store in IndexedDB. "Tap to change photo" hint.
+   - Display name input.
+   - Workout count (read-only).
+   - Workout schedule: 7 day-of-week buttons (Su-Sa). Selected = green. Stored in IndexedDB/localStorage.
+   - Workout reminders: toggle switch. When enabled: custom message input, time picker (hour 0-23, minute 0-59). Use Notification API + service worker to schedule. Request notification permission when enabled.
 
-3. Workout count reflects total completed workouts (from CompletedWorkout); update when user finishes a workout (already done in Phase 5/6).
-
-Match the Profile design in assets/references/: dark background, light grey card, muted green if needed. No sign-up or sync.
+Match dark theme per design assets.
 ```
 
-**Done when:** Profile shows Guest or name and completed workout count; tapping the card opens profile/settings (name, avatar); data is local only.
+**Done when:** Profile shows avatar, name, count, streak, bodyweight chart, add/view entries; Edit Profile saves avatar, name, schedule, reminders; streak calculates correctly.
 
 ---
 
-## Phase 8: Calendar Day View & Copy Workout
+## Phase 7: Calendar Day View
 
 **Paste this prompt:**
 
 ```
-RepSync Web — follow docs/plan-web.md. Phases 1–7 are done. Do Phase 8 only: Calendar day view and copy/create-from-day. Same as Android (docs/plan.md Section 5.7).
+RepSync Web — docs/plan-web.md. Phases 1-6 done. Do Phase 7: Calendar Day View.
 
-Design assets to reference for this phase: assets/references/ — use the Calendar and day view screens (tap day → day view, list of workouts for that day, "Copy to another day", "Use as template" / "Create workout from a day"). Match layout and actions.
+Design assets: assets/references/ — Day view screens.
 
-1. Day view (plan-web.md Section 5.7):
-   - From Home, tapping a calendar day opens Day view for that date.
-   - Day view: list of workouts completed (or started) that day; for each: name, duration, exercises/sets if desired.
-   - Option "Copy to another day": pick target date and create a copy (e.g. as CompletedWorkout or template for that day).
-   - Option "Create workout from a day" / "Use as template": save that day's workout as a reusable template (use from Workouts list later). Includes quick workouts.
+1. Day View screen (plan-web.md Section 5.8):
+   - Header: Back arrow, formatted date (e.g., "February 24, 2026").
+   - Per completed workout on that day:
+     - Workout name, duration (MM:SS), "Quick Workout" label if applicable.
+     - Exercise rows (expandable on tap):
+       - Exercise name in green (tappable → /exercise-history/:name). Hourglass icon.
+       - Chevron icon (▼ expanded, ▸ collapsed).
+       - When expanded: set detail rows with columns SET | WEIGHT | REPS.
+         - Set number, trophy (🏆) for best set (highest weight), weight + "lbs", reps + "reps".
+         - Sort sets by orderIndex.
+     - Action buttons row:
+       - "Copy" → date picker dialog (mini calendar). Copies workout to selected date as a new CompletedWorkout.
+       - "Template" → dialog with name input. Saves as a reusable Workout template.
+       - "Remove" → confirmation dialog. Permanently deletes this completed workout.
+     - Success banners: auto-dismiss after 2 seconds ("Template saved!", "Workout copied!", "Workout removed!").
+   - Empty state: "No workouts on this day".
 
-2. Implement "Copy to another day" and "Save as template" (from day view and, if desired, from Quick Workout completion) so the user can:
-   - Copy a workout from one day to another.
-   - Create a new workout template from a past day (including quick workouts).
+2. Date picker for "Copy": simple calendar or date input to pick target date.
 
-Match the Calendar/day view design in assets/references/ and plan-web.md theme. All local; no cloud.
+3. Save as template: create new Workout from CompletedWorkout data (name, exercises, set counts).
+
+Match dark theme. Exercise name in green text (#8DAF8E). Light card background (#D1D1D6) for expanded set details if matching Android.
 ```
 
-**Done when:** Tapping a day opens Day view with list of workouts; user can copy a workout to another day and create a template from a day's workout; Quick Workout can be saved as template if desired.
+**Done when:** Tapping calendar day opens Day View; exercises expandable with full set details; Copy, Template, Remove all work; success banners show.
 
 ---
 
-## Phase 9: PWA Polish, iOS Add to Home Screen & README
+## Phase 8: Exercise History & Bodyweight Entries
 
 **Paste this prompt:**
 
 ```
-RepSync Web — docs/plan-web.md is the spec. Phases 1–8 are done. Do Phase 9 only: PWA polish, iOS install instructions, and README.
+RepSync Web — docs/plan-web.md. Phases 1-7 done. Do Phase 8: Exercise History and Bodyweight Entries screens.
 
-No new UI this phase. Repo structure (plan-web.md Section 10) includes docs/, prompts-web.md, assets/repSyncLogo.png, assets/references/, web/ app. Do not delete or move design assets.
+1. Exercise History (plan-web.md Section 5.9):
+   - Header: Back, exercise name.
+   - Stats row (3 cards): PR (max weight), Volume (total weight x reps, formatted as K/M), Sessions (count).
+   - Weight progression chart: same chart component as Profile bodyweight chart (green line/dots, grid, axis labels). Shows max weight per session over time.
+   - History section:
+     - "History" title.
+     - Date range filter: "Filter by Date" button → date range picker dialog. "Clear Filter" when active. Shows "Jan 1 – Jan 14" or similar.
+     - Default shows "Showing last X of Y sessions".
+     - Session cards: date, workout name, set rows ("Set 1: 135 lbs x 10 reps").
+   - Date range picker: start date input (MM/DD/YYYY), auto-calculates 2-week window, preview, Apply/Cancel.
+   - Empty states: "No history for this exercise" / "No sessions in this date range".
+
+2. Bodyweight Entries (plan-web.md Section 5.10):
+   - Header: Back, "Bodyweight Entries".
+   - Date range filter: "All Time" or active range display. "Filter by Date" / "Clear" button.
+   - Entries list (reverse chronological): date, weight value, edit (pencil icon), delete (X, destructive).
+   - Edit Weight dialog: shows date, decimal input pre-filled, Save/Cancel.
+   - Date range picker: start/end date inputs, preview, Apply/Cancel.
+   - Empty states: "No entries" / "No entries in selected range".
+
+3. Wire exercise history navigation: hourglass icon in Active Workout and exercise name in Day View both navigate to /exercise-history/:name.
+
+4. Wire "View All Entries" on Profile to /bodyweight-entries.
+
+Reuse the chart component from Profile for both screens.
+```
+
+**Done when:** Exercise History shows stats, chart, filterable session history; Bodyweight Entries shows filterable list with edit/delete; navigation from Active Workout and Day View works.
+
+---
+
+## Phase 9: PWA Polish, Data Safety & README
+
+**Paste this prompt:**
+
+```
+RepSync Web — docs/plan-web.md. Phases 1-8 done. Do Phase 9: PWA polish, data safety, and documentation.
 
 1. PWA polish:
-   - Ensure manifest has correct start_url, display standalone, icons (including Apple touch icon), theme_color, background_color.
-   - Service worker caches app shell and (as appropriate) static assets so the app works offline after first load. Test that Add to Home Screen still works and app launches in standalone mode.
+   - Verify manifest: correct start_url, display standalone, all icons, theme_color #000000, background_color #000000.
+   - Service worker caches app shell + static assets for offline. Test that app works offline after first load.
+   - Test Add to Home Screen on iOS Safari: app launches in standalone mode with correct icon and splash.
 
-2. Document for iOS users (in README and optionally a short in-app hint):
-   - Open the app URL in Safari on iOS.
-   - Tap Share → Add to Home Screen.
-   - Name the icon (e.g. "RepSync") and tap Add.
-   - Launch from home screen for full-screen app experience.
-   Mention that data is stored only on the device and no account is required.
+2. Data safety (plan-web.md Section 2):
+   - Implement data export: button in Edit Profile or Profile. Exports all data (workouts, exercises, sets, completed workouts, bodyweight, profile, settings) as a single JSON file. Trigger browser download.
+   - Implement data import: button in Edit Profile. File picker for JSON. Validate structure, merge or replace data, confirm with user.
+   - navigator.storage.persist() is already called on startup (Phase 1). Verify it's working.
 
-3. Update README (web app or root) to include:
-   - Short description: RepSync Web — same app as Android, installable on iOS via Add to Home Screen.
-   - How to run dev (e.g. npm run dev in web/).
-   - How to build (npm run build) and where output is (e.g. web/dist).
-   - How to deploy (e.g. deploy dist to GitHub Pages, Netlify, or any static host over HTTPS).
-   - iOS install steps (as above). Note: HTTPS required for service worker and Add to Home Screen.
+3. In-app install hint: If running in Safari (not standalone), show a dismissible banner: "Add to Home Screen for the best experience" with brief instructions.
 
-4. Confirm repo structure matches plan-web.md Section 10. Do not add Spotify or cloud; plan-web.md Section 7 says Spotify is future only.
+4. Update README (web/ folder) with:
+   - Description: RepSync Web — workout tracker PWA, identical to the Android app.
+   - How to run dev: npm run dev in web/.
+   - How to build: npm run build. Output in web/dist.
+   - How to deploy: deploy dist/ to any static HTTPS host.
+   - iOS install steps: Open URL in Safari → Share → Add to Home Screen.
+   - Note: data is stored locally only; use export/import for backup.
+
+5. Final testing checklist:
+   - All screens match design assets and dark theme.
+   - Drag-to-reorder works on touch devices (workouts + exercises).
+   - Rest timer sound plays in background.
+   - Calendar dots update after finishing a workout.
+   - Streak calculates correctly with and without schedule.
+   - Charts render correctly with various data amounts.
+   - Auto-select text on weight/reps input focus.
+   - Exercise autocomplete works.
+   - Offline mode works after first load.
 ```
 
-**Done when:** PWA is installable on iOS via Add to Home Screen; app works offline after first load; README has dev, build, deploy, and iOS install instructions; repo structure is correct.
+**Done when:** PWA installable on iOS; offline works; data export/import works; README complete; all features match Android app.
 
 ---
 
@@ -297,36 +381,51 @@ No new UI this phase. Repo structure (plan-web.md Section 10) includes docs/, pr
 After all phases, confirm:
 
 - [ ] Guest by default; optional local profile (name, avatar).
-- [ ] All data stored only in browser/device (IndexedDB).
-- [ ] Home: calendar with green dots for days with workouts; Workouts + Quick Go buttons; bottom nav Home | Profile.
-- [ ] Workouts: list templates, search (optional), FAB "+", tap row → detail → Start Workout.
-- [ ] New Workout: name, add exercises, sets (Previous, +lbs, Reps), Save.
-- [ ] Active workout: elapsed timer, optional set timer, add set, add exercise, finish workout, close (X) with "Cancel Workout?" (Resume / Cancel).
-- [ ] "Finish Workout?" dialog (Cancel / Finish); on Finish, save to history and increment profile count.
-- [ ] Quick Workout: same as active workout, no pre-filled exercises.
-- [ ] Profile: show Guest or name, completed workout count, entry to profile/settings.
-- [ ] Calendar: tap day → day view; view past workouts; copy workout from one day to another; create template from a day's workout.
-- [ ] PWA: installable on iOS via Add to Home Screen; works offline after first load; standalone display.
+- [ ] All data in IndexedDB. navigator.storage.persist() called. JSON export/import available.
+- [ ] Home: calendar with green dots, motivational anime GIF (random each open), Workouts + Quick Go buttons, bottom nav.
+- [ ] Workouts: list with drag-to-reorder, search, FAB "+", detail overlay → Start / Edit.
+- [ ] New/Edit Workout: name, exercises with autocomplete + drag-to-reorder, sets, Save.
+- [ ] Active Workout: timer, rest timer (sound + vibration + notification), exercise cards with drag-to-reorder, set table (Previous, +lbs, Reps, checkmark), exercise history via hourglass, add set/exercise, finish/cancel dialogs.
+- [ ] Quick Workout: same as active, no pre-filled exercises, flagged as quick.
+- [ ] Profile: avatar + name + count, streak badge, bodyweight section (chart, add, view all).
+- [ ] Edit Profile: avatar, name, workout schedule, reminders.
+- [ ] Day View: expandable exercise/set details, copy to day, save as template, delete workout.
+- [ ] Exercise History: stats (PR, volume, sessions), chart, filterable session history.
+- [ ] Bodyweight Entries: filterable list, edit weight, delete.
+- [ ] Auto-select text on focus, exercise autocomplete.
+- [ ] PWA: installable on iOS, works offline, standalone display.
+- [ ] Data export/import for backup safety.
 
 ---
 
 ## One-Shot Full Build Prompt (Optional)
 
-If you prefer to give Claude the whole scope in one go, use the following. Prefer the phased prompts above for better control.
+If you prefer to give Claude the whole scope in one go:
 
 ```
-Build RepSync Web from scratch using docs/plan-web.md as the single source of truth. The app must be functionally identical to the Android RepSync app (docs/plan.md for flows). Design assets: assets/repSyncLogo.png and assets/references/IMG_1505.PNG through IMG_1538.PNG. Match layout, spacing, and theme: dark background, muted sage green primary actions, light grey cards, rounded corners, clean typography.
+Build RepSync Web from scratch using docs/plan-web.md as the single source of truth. The app must be functionally identical to the Android RepSync app (in app/ directory). Design assets: assets/repSyncLogo.png and assets/references/IMG_1505.PNG through IMG_1538.PNG.
 
-Requirements:
-- Web PWA (Vite + React or Vue + TypeScript). Static build; no backend. IndexedDB for all data (same model as Android: Workout, Exercise, Set, CompletedWorkout, User). Guest by default; optional local profile.
-- PWA: Web App Manifest (standalone, icons from repSyncLogo.png, theme_color, background_color), service worker for offline. iOS: Add to Home Screen from Safari; support safe-area and touch targets ≥ 44px.
-- Implement all flows in plan-web.md Section 5 (same as plan.md 5.1–5.7): Home, Workouts list + detail + New Workout, Active Workout, Quick Workout, Profile, Calendar day view with copy-to-day and create-template-from-day.
-- Feature checklist: plan-web.md Section 6. No Spotify in v1 (Section 7).
-- README: how to run dev, build, deploy (HTTPS), and iOS Add to Home Screen steps.
+Stack: Vite + React + TypeScript in web/ folder. IndexedDB via Dexie.js. PWA with vite-plugin-pwa. @dnd-kit for drag-to-reorder.
 
-Deliver a web app that can be deployed to HTTPS and installed on iOS home screen with identical behavior to the Android app.
+Theme: pure black background, dark charcoal surface (#1A1A1A), cards (#2C2C2E), sage green primary (#8DAF8E), muted rose destructive (#C48B8B), white text, rounded corners. CSS variables. Touch targets >= 44px.
+
+All features from plan-web.md Sections 5.1-5.10:
+- Home: calendar with workout dots, random anime GIF, Workouts/Quick Go buttons.
+- Workouts list: drag-to-reorder, search, detail overlay, Start/Edit.
+- New/Edit Workout: exercises with drag-to-reorder + autocomplete, sets, Save.
+- Active Workout: timer, rest timer (audio alert + vibration), drag-to-reorder exercises, set table with Previous/weight/reps/checkmark, exercise history link, finish/cancel dialogs.
+- Quick Workout: same as active, no template.
+- Profile: avatar/name/count card, streak badge, bodyweight chart + add + view all entries.
+- Edit Profile: avatar picker, name, workout schedule, reminders.
+- Day View: expandable set details, copy to day, save as template, delete workout.
+- Exercise History: stats (PR/volume/sessions), chart, filterable session list.
+- Bodyweight Entries: filterable list, edit/delete.
+- Data export/import (JSON backup).
+- PWA: installable on iOS via Add to Home Screen, offline-first.
+
+Deliver a complete, deployable static web app with README.
 ```
 
 ---
 
-*End of prompt guide. Keep docs/plan-web.md in context for every phase, and reference assets in assets/ (repSyncLogo.png) and assets/references/ (IMG_1505.PNG–IMG_1538.PNG) when building UI.*
+*End of prompt guide. Keep docs/plan-web.md in context for every phase, and reference assets/ when building UI.*
