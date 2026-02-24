@@ -32,7 +32,7 @@ import com.repsync.app.data.entity.WorkoutEntity
         UserProfileEntity::class,
         BodyweightEntryEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -61,6 +61,19 @@ abstract class RepSyncDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE workouts ADD COLUMN orderIndex INTEGER NOT NULL DEFAULT 0")
+                db.execSQL(
+                    """
+                    UPDATE workouts SET orderIndex = (
+                        SELECT COUNT(*) FROM workouts w2 WHERE w2.createdAt > workouts.createdAt
+                    )
+                    """.trimIndent()
+                )
+            }
+        }
+
         fun getDatabase(context: Context): RepSyncDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -68,7 +81,7 @@ abstract class RepSyncDatabase : RoomDatabase() {
                     RepSyncDatabase::class.java,
                     "repsync_database"
                 )
-                    .addMigrations(MIGRATION_1_2)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                     .build()
                 INSTANCE = instance
                 instance
