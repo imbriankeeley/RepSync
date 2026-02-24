@@ -100,6 +100,9 @@ dependencies {
     implementation("io.coil-kt:coil-compose:2.7.0")
     implementation("io.coil-kt:coil-gif:2.7.0")
 
+    // Reorderable (drag-to-reorder for LazyColumn)
+    implementation("sh.calvin.reorderable:reorderable:2.4.3")
+
     // Debug
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
