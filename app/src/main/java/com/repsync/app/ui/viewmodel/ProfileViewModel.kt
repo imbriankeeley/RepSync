@@ -38,6 +38,8 @@ data class ProfileUiState(
     val showAddBodyweightDialog: Boolean = false,
     val showEditBodyweightDialog: Boolean = false,
     val editingBodyweightEntry: BodyweightEntryEntity? = null,
+    val showDeleteBodyweightDialog: Boolean = false,
+    val deletingBodyweightEntry: BodyweightEntryEntity? = null,
     // Workout schedule days (source of truth for streaks AND reminders)
     val workoutDays: Set<DayOfWeek> = emptySet(),
     // Reminder settings (uses workoutDays for scheduling)
@@ -204,9 +206,25 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    fun deleteBodyweightEntry(entry: BodyweightEntryEntity) {
+    fun showDeleteBodyweightDialog(entry: BodyweightEntryEntity) {
+        _uiState.value = _uiState.value.copy(
+            deletingBodyweightEntry = entry,
+            showDeleteBodyweightDialog = true,
+        )
+    }
+
+    fun dismissDeleteBodyweightDialog() {
+        _uiState.value = _uiState.value.copy(
+            deletingBodyweightEntry = null,
+            showDeleteBodyweightDialog = false,
+        )
+    }
+
+    fun confirmDeleteBodyweightEntry() {
+        val entry = _uiState.value.deletingBodyweightEntry ?: return
         viewModelScope.launch {
             bodyweightDao.delete(entry)
+            dismissDeleteBodyweightDialog()
         }
     }
 

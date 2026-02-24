@@ -235,7 +235,7 @@ fun BodyweightEntriesScreen(
                                 .size(28.dp)
                                 .clip(CircleShape)
                                 .background(DestructiveRed.copy(alpha = 0.8f))
-                                .clickable { viewModel.deleteEntry(entry) },
+                                .clickable { viewModel.showDeleteDialog(entry) },
                             contentAlignment = Alignment.Center,
                         ) {
                             Text(
@@ -261,6 +261,14 @@ fun BodyweightEntriesScreen(
             entry = uiState.editingEntry!!,
             onDismiss = { viewModel.dismissEditDialog() },
             onSave = { id, newWeight -> viewModel.updateWeight(id, newWeight) },
+        )
+    }
+
+    // Delete confirmation dialog
+    if (uiState.showDeleteDialog && uiState.deletingEntry != null) {
+        DeleteBodyweightEntryDialog(
+            onDismiss = { viewModel.dismissDeleteDialog() },
+            onConfirm = { viewModel.confirmDeleteEntry() },
         )
     }
 
@@ -666,6 +674,88 @@ private fun DateInputRow(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 singleLine = true,
             )
+        }
+    }
+}
+
+@Composable
+private fun DeleteBodyweightEntryDialog(
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(BackgroundPrimary.copy(alpha = 0.7f))
+            .clickable { onDismiss() },
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 32.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(BackgroundCard)
+                .clickable { /* Consume clicks */ }
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                text = "Delete Entry?",
+                color = TextOnDark,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "This will permanently remove this bodyweight entry.",
+                color = TextOnDarkSecondary,
+                fontSize = 14.sp,
+                textAlign = TextAlign.Center,
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(44.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(BackgroundCardElevated)
+                        .clickable { onDismiss() },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "Cancel",
+                        color = TextOnDarkSecondary,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(44.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(DestructiveRed)
+                        .clickable { onConfirm() },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "Delete",
+                        color = TextOnDark,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+            }
         }
     }
 }

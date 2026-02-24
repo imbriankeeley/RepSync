@@ -49,11 +49,6 @@ private val workoutGifs = listOf(
     "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMWh2d2FpeWMxcDAzcnEwa3Q2eHRzbXJrbDFhbTNicm5oZThhdWRkZiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/VFBAJmjmArR6jcWr9G/giphy.gif",
     "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMWh2d2FpeWMxcDAzcnEwa3Q2eHRzbXJrbDFhbTNicm5oZThhdWRkZiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/qW3iR9I30ndCM/giphy.gif",
     "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3bzB0Z29pc3h5eW01bTFqajVpc3IweGxydmQ4b3FlcWNwNnlna3BtNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/9jNjhwA5S4zMQ/giphy.gif",
-    "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExaml0bHA2OTlwc2hwOXBtYTczOWhobmJmNzNuM3R0N3hmcDVxbTJ3OCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/54R23E45hwjrMrj450/giphy.gif",
-    "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExaml0bHA2OTlwc2hwOXBtYTczOWhobmJmNzNuM3R0N3hmcDVxbTJ3OCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/pRgMFB4CxBAILSZsLH/giphy.gif",
-    "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExaml0bHA2OTlwc2hwOXBtYTczOWhobmJmNzNuM3R0N3hmcDVxbTJ3OCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/UejTmpSCJ0ikb2lXWS/giphy.gif",
-    "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExaml0bHA2OTlwc2hwOXBtYTczOWhobmJmNzNuM3R0N3hmcDVxbTJ3OCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/enRj5D72igadpxSYDM/giphy.gif",
-    "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExaml0bHA2OTlwc2hwOXBtYTczOWhobmJmNzNuM3R0N3hmcDVxbTJ3OCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/JRX5tDQRpe3uI45az0/giphy.gif",
 )
 
 /**

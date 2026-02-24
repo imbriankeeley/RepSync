@@ -18,6 +18,8 @@ data class BodyweightEntriesUiState(
     val endDate: LocalDate? = null,
     val editingEntry: BodyweightEntryEntity? = null,
     val showEditDialog: Boolean = false,
+    val showDeleteDialog: Boolean = false,
+    val deletingEntry: BodyweightEntryEntity? = null,
     val showDatePicker: Boolean = false,
 )
 
@@ -86,9 +88,25 @@ class BodyweightEntriesViewModel(application: Application) : AndroidViewModel(ap
         }
     }
 
-    fun deleteEntry(entry: BodyweightEntryEntity) {
+    fun showDeleteDialog(entry: BodyweightEntryEntity) {
+        _uiState.value = _uiState.value.copy(
+            deletingEntry = entry,
+            showDeleteDialog = true,
+        )
+    }
+
+    fun dismissDeleteDialog() {
+        _uiState.value = _uiState.value.copy(
+            deletingEntry = null,
+            showDeleteDialog = false,
+        )
+    }
+
+    fun confirmDeleteEntry() {
+        val entry = _uiState.value.deletingEntry ?: return
         viewModelScope.launch {
             bodyweightDao.delete(entry)
+            dismissDeleteDialog()
         }
     }
 

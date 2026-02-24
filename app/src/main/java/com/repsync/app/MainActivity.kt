@@ -47,24 +47,29 @@ class MainActivity : ComponentActivity() {
                 val isOnActiveWorkoutScreen = currentRoute?.startsWith("active_workout") == true
                     || currentRoute == Screen.QuickWorkout.route
 
+                val showBottomNav = currentRoute == Screen.Home.route
+                    || currentRoute == Screen.Profile.route
+
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     containerColor = MaterialTheme.colorScheme.background,
                     bottomBar = {
-                        BottomNavBar(
-                            currentRoute = currentRoute,
-                            onTabSelected = { tab ->
-                                if (currentRoute == tab.route) return@BottomNavBar
+                        if (showBottomNav) {
+                            BottomNavBar(
+                                currentRoute = currentRoute,
+                                onTabSelected = { tab ->
+                                    if (currentRoute == tab.route) return@BottomNavBar
 
-                                // From any screen, pop back to Home and navigate to the tab
-                                navController.navigate(tab.route) {
-                                    popUpTo(Screen.Home.route) {
-                                        inclusive = (tab == BottomNavTab.Home)
+                                    // From any screen, pop back to Home and navigate to the tab
+                                    navController.navigate(tab.route) {
+                                        popUpTo(Screen.Home.route) {
+                                            inclusive = (tab == BottomNavTab.Home)
+                                        }
+                                        launchSingleTop = true
                                     }
-                                    launchSingleTop = true
-                                }
-                            },
-                        )
+                                },
+                            )
+                        }
                     },
                 ) { innerPadding ->
                     Column(modifier = Modifier.padding(innerPadding)) {

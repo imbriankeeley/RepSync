@@ -146,7 +146,7 @@ fun ProfileScreen(
                 recentEntries = uiState.bodyweightEntries.reversed().take(3),
                 onAddClick = { viewModel.showAddBodyweightDialog() },
                 onEditEntry = { viewModel.showEditBodyweightDialog(it) },
-                onDeleteEntry = { viewModel.deleteBodyweightEntry(it) },
+                onDeleteEntry = { viewModel.showDeleteBodyweightDialog(it) },
                 onViewAllEntries = onNavigateToBodyweightEntries,
                 modifier = Modifier.weight(1f),
             )
@@ -169,6 +169,14 @@ fun ProfileScreen(
                 entry = uiState.editingBodyweightEntry!!,
                 onDismiss = { viewModel.dismissEditBodyweightDialog() },
                 onSave = { id, newWeight -> viewModel.updateBodyweightEntry(id, newWeight) },
+            )
+        }
+
+        // Delete bodyweight confirmation dialog
+        if (uiState.showDeleteBodyweightDialog && uiState.deletingBodyweightEntry != null) {
+            DeleteBodyweightDialog(
+                onDismiss = { viewModel.dismissDeleteBodyweightDialog() },
+                onConfirm = { viewModel.confirmDeleteBodyweightEntry() },
             )
         }
     }
@@ -633,6 +641,88 @@ private fun EditBodyweightDialog(
                 ) {
                     Text(
                         text = "Save",
+                        color = TextOnDark,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DeleteBodyweightDialog(
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(BackgroundPrimary.copy(alpha = 0.7f))
+            .clickable { onDismiss() },
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 32.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(BackgroundCard)
+                .clickable { /* Consume clicks */ }
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                text = "Delete Entry?",
+                color = TextOnDark,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "This will permanently remove this bodyweight entry.",
+                color = TextOnDarkSecondary,
+                fontSize = 14.sp,
+                textAlign = TextAlign.Center,
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(44.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(BackgroundCardElevated)
+                        .clickable { onDismiss() },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "Cancel",
+                        color = TextOnDarkSecondary,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(44.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(DestructiveRed)
+                        .clickable { onConfirm() },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "Delete",
                         color = TextOnDark,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
