@@ -21,4 +21,5 @@ sealed class Screen(val route: String) {
     data object ExerciseHistory : Screen("exercise_history/{exerciseName}") {
         fun createRoute(exerciseName: String) = "exercise_history/${Uri.encode(exerciseName)}"
     }
+    data object BodyweightEntries : Screen("bodyweight_entries")
 }

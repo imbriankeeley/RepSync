@@ -306,9 +306,14 @@ private fun CompletedWorkoutCard(
 
         // Exercise summary
         workoutWithExercises.exercises.forEachIndexed { index, exerciseWithSets ->
-            ExerciseSummaryRow(exerciseWithSets, onExerciseNameClick)
+            ExerciseSummaryRow(
+                exerciseWithSets = exerciseWithSets,
+                onExerciseNameClick = onExerciseNameClick,
+            )
             if (index < workoutWithExercises.exercises.size - 1) {
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(6.dp))
+                HorizontalDivider(color = Divider, thickness = 0.5.dp)
+                Spacer(modifier = Modifier.height(6.dp))
             }
         }
 
@@ -378,23 +383,22 @@ private fun ExerciseSummaryRow(
     exerciseWithSets: CompletedExerciseWithSets,
     onExerciseNameClick: (String) -> Unit = {},
 ) {
-    val sets = exerciseWithSets.sets
-    val setsCount = sets.size
+    val sortedSets = exerciseWithSets.sets.sortedBy { it.orderIndex }
+    val bestSet = exerciseWithSets.sets.maxByOrNull { it.weight ?: 0.0 }
 
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
+    Column {
+        // Exercise name header
         Row(
             modifier = Modifier
-                .weight(1f)
+                .fillMaxWidth()
                 .clickable { onExerciseNameClick(exerciseWithSets.exercise.name) },
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "$setsCount x ${exerciseWithSets.exercise.name}",
+                text = exerciseWithSets.exercise.name,
                 color = PrimaryGreen,
                 style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.SemiBold,
             )
             Spacer(modifier = Modifier.width(4.dp))
             Text(
@@ -403,16 +407,111 @@ private fun ExerciseSummaryRow(
             )
         }
 
-        // Show the best set (heaviest weight)
-        val bestSet = sets.maxByOrNull { it.weight ?: 0.0 }
-        if (bestSet != null && (bestSet.weight != null || bestSet.reps != null)) {
-            val weightStr = bestSet.weight?.let { formatWeight(it) } ?: "-"
-            val repsStr = bestSet.reps?.toString() ?: "-"
+        Spacer(modifier = Modifier.height(6.dp))
+
+        // Column headers
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp),
+        ) {
             Text(
-                text = "$weightStr lbs x $repsStr",
-                color = TextOnDarkSecondary,
-                style = MaterialTheme.typography.bodyMedium,
+                text = "SET",
+                color = TextOnDarkSecondary.copy(alpha = 0.5f),
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.width(36.dp),
             )
+            Spacer(modifier = Modifier.weight(1f))
+            Text(
+                text = "WEIGHT",
+                color = TextOnDarkSecondary.copy(alpha = 0.5f),
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.width(80.dp),
+                textAlign = TextAlign.End,
+            )
+            Text(
+                text = "REPS",
+                color = TextOnDarkSecondary.copy(alpha = 0.5f),
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.width(56.dp),
+                textAlign = TextAlign.End,
+            )
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        // Set rows
+        sortedSets.forEachIndexed { index, set ->
+            val isBest = set == bestSet && sortedSets.size > 1
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp, vertical = 3.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                // Set number
+                Text(
+                    text = "${index + 1}",
+                    color = TextOnDarkSecondary,
+                    fontSize = 14.sp,
+                    modifier = Modifier.width(24.dp),
+                )
+                // Trophy for best set
+                if (isBest) {
+                    Text(
+                        text = "\uD83C\uDFC6",
+                        fontSize = 12.sp,
+                        modifier = Modifier.width(12.dp),
+                    )
+                } else {
+                    Spacer(modifier = Modifier.width(12.dp))
+                }
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                // Weight
+                Row(
+                    modifier = Modifier.width(80.dp),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = set.weight?.let { formatWeight(it) } ?: "-",
+                        color = TextOnDark,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Spacer(modifier = Modifier.width(3.dp))
+                    Text(
+                        text = "lbs",
+                        color = TextOnDarkSecondary,
+                        fontSize = 11.sp,
+                    )
+                }
+
+                // Reps
+                Row(
+                    modifier = Modifier.width(56.dp),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = set.reps?.toString() ?: "-",
+                        color = TextOnDark,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Spacer(modifier = Modifier.width(3.dp))
+                    Text(
+                        text = "reps",
+                        color = TextOnDarkSecondary,
+                        fontSize = 11.sp,
+                    )
+                }
+            }
         }
     }
 }

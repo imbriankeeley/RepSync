@@ -10,11 +10,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -32,8 +34,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -41,6 +45,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import com.repsync.app.ui.components.ExerciseNameField
 import com.repsync.app.ui.theme.BackgroundCard
 import com.repsync.app.ui.theme.BackgroundCardElevated
@@ -56,6 +61,8 @@ import com.repsync.app.ui.viewmodel.ActiveExerciseUiModel
 import com.repsync.app.ui.viewmodel.ActiveSetUiModel
 import com.repsync.app.ui.viewmodel.ActiveWorkoutManager
 import com.repsync.app.util.formatElapsedTime
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
 
 @Composable
 fun ActiveWorkoutScreen(
@@ -97,7 +104,7 @@ fun ActiveWorkoutScreen(
         return
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize().imePadding()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -126,44 +133,64 @@ fun ActiveWorkoutScreen(
                 }
             } else {
                 // Exercise list + buttons
+                val lazyListState = rememberLazyListState()
+                val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
+                    // Offset by 1 for the header spacer item
+                    activeWorkoutManager.moveExercise(from.index - 1, to.index - 1)
+                }
+
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 16.dp),
+                    state = lazyListState,
                 ) {
                     item {
                         Spacer(modifier = Modifier.height(16.dp))
                     }
 
-                    // Exercise cards
+                    // Exercise cards (reorderable)
                     itemsIndexed(
                         items = uiState.exercises,
                         key = { _, exercise -> exercise.id },
                     ) { _, exercise ->
-                        ActiveExerciseCard(
-                            exercise = exercise,
-                            exerciseNameSuggestions = uiState.exerciseNameSuggestions,
-                            onExerciseNameChange = { name ->
-                                activeWorkoutManager.onExerciseNameChange(exercise.id, name)
-                            },
-                            onAddSet = { activeWorkoutManager.addSet(exercise.id) },
-                            onRemoveSet = { setIndex ->
-                                activeWorkoutManager.removeSet(exercise.id, setIndex)
-                            },
-                            onSetWeightChange = { setIndex, weight ->
-                                activeWorkoutManager.onSetWeightChange(exercise.id, setIndex, weight)
-                            },
-                            onSetRepsChange = { setIndex, reps ->
-                                activeWorkoutManager.onSetRepsChange(exercise.id, setIndex, reps)
-                            },
-                            onToggleSetCompleted = { setIndex ->
-                                activeWorkoutManager.toggleSetCompleted(exercise.id, setIndex)
-                            },
-                            onRemoveExercise = {
-                                activeWorkoutManager.removeExercise(exercise.id)
-                            },
-                            onExerciseHistoryClick = onNavigateToExerciseHistory,
-                        )
+                        ReorderableItem(reorderableLazyListState, key = exercise.id) { isDragging ->
+                            ActiveExerciseCard(
+                                exercise = exercise,
+                                exerciseNameSuggestions = uiState.exerciseNameSuggestions,
+                                onExerciseNameChange = { name ->
+                                    activeWorkoutManager.onExerciseNameChange(exercise.id, name)
+                                },
+                                onAddSet = { activeWorkoutManager.addSet(exercise.id) },
+                                onRemoveSet = { setIndex ->
+                                    activeWorkoutManager.removeSet(exercise.id, setIndex)
+                                },
+                                onSetWeightChange = { setIndex, weight ->
+                                    activeWorkoutManager.onSetWeightChange(exercise.id, setIndex, weight)
+                                },
+                                onSetRepsChange = { setIndex, reps ->
+                                    activeWorkoutManager.onSetRepsChange(exercise.id, setIndex, reps)
+                                },
+                                onToggleSetCompleted = { setIndex ->
+                                    activeWorkoutManager.toggleSetCompleted(exercise.id, setIndex)
+                                },
+                                onRemoveExercise = {
+                                    activeWorkoutManager.removeExercise(exercise.id)
+                                },
+                                onExerciseHistoryClick = onNavigateToExerciseHistory,
+                                modifier = Modifier
+                                    .longPressDraggableHandle()
+                                    .graphicsLayer {
+                                        alpha = if (isDragging) 0.85f else 1f
+                                    }
+                                    .then(
+                                        if (isDragging) Modifier
+                                            .zIndex(1f)
+                                            .shadow(8.dp, RoundedCornerShape(16.dp))
+                                        else Modifier
+                                    ),
+                            )
+                        }
                         Spacer(modifier = Modifier.height(12.dp))
                     }
 
@@ -337,9 +364,10 @@ private fun ActiveExerciseCard(
     onToggleSetCompleted: (Int) -> Unit,
     onRemoveExercise: () -> Unit,
     onExerciseHistoryClick: (String) -> Unit = {},
+    modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(BackgroundCard)

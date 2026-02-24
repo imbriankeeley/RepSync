@@ -28,6 +28,7 @@ data class NewWorkoutUiState(
     val isSaving: Boolean = false,
     val isSaved: Boolean = false,
     val editingWorkoutId: Long? = null,
+    val editingWorkoutOrderIndex: Int? = null,
     val exerciseNameSuggestions: List<String> = emptyList(),
 )
 
@@ -71,6 +72,7 @@ class NewWorkoutViewModel(application: Application) : AndroidViewModel(applicati
                 workoutName = workoutWithExercises.workout.name,
                 exercises = exercises,
                 editingWorkoutId = workoutId,
+                editingWorkoutOrderIndex = workoutWithExercises.workout.orderIndex,
             )
         }
     }
@@ -91,6 +93,13 @@ class NewWorkoutViewModel(application: Application) : AndroidViewModel(applicati
         _uiState.value = current.copy(
             exercises = current.exercises.filter { it.id != exerciseId }
         )
+    }
+
+    fun moveExercise(fromIndex: Int, toIndex: Int) {
+        val currentExercises = _uiState.value.exercises.toMutableList()
+        val item = currentExercises.removeAt(fromIndex)
+        currentExercises.add(toIndex, item)
+        _uiState.value = _uiState.value.copy(exercises = currentExercises)
     }
 
     fun onExerciseNameChange(exerciseId: String, name: String) {
@@ -141,14 +150,16 @@ class NewWorkoutViewModel(application: Application) : AndroidViewModel(applicati
         viewModelScope.launch {
             val editId = state.editingWorkoutId
             if (editId != null) {
-                // Update existing workout
-                workoutDao.updateWorkout(WorkoutEntity(id = editId, name = state.workoutName))
+                // Update existing workout, preserving orderIndex
+                val orderIndex = state.editingWorkoutOrderIndex ?: 0
+                workoutDao.updateWorkout(WorkoutEntity(id = editId, name = state.workoutName, orderIndex = orderIndex))
                 workoutDao.deleteExercisesByWorkoutId(editId)
                 insertExercisesAndSets(editId, state.exercises)
             } else {
-                // Create new workout
+                // Create new workout at the bottom of the list
+                val count = workoutDao.getWorkoutCount()
                 val workoutId = workoutDao.insertWorkout(
-                    WorkoutEntity(name = state.workoutName)
+                    WorkoutEntity(name = state.workoutName, orderIndex = count)
                 )
                 insertExercisesAndSets(workoutId, state.exercises)
             }

@@ -13,10 +13,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -36,7 +34,6 @@ import com.repsync.app.ui.theme.PrimaryGreen
 import com.repsync.app.ui.theme.TextOnDark
 import com.repsync.app.ui.theme.TextOnDarkSecondary
 import com.repsync.app.ui.viewmodel.HomeViewModel
-import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.TextStyle
@@ -64,18 +61,14 @@ fun HomeScreen(
                 .weight(1f),
             verticalArrangement = Arrangement.SpaceBetween,
         ) {
-            // Calendar card + streak
-            Column {
-                CalendarCard(
-                    currentMonth = uiState.currentMonth,
-                    workoutDates = uiState.workoutDates,
-                    onPreviousMonth = viewModel::previousMonth,
-                    onNextMonth = viewModel::nextMonth,
-                    onDayClick = onDayClick,
-                )
-
-                StreakBadge(streak = uiState.currentStreak)
-            }
+            // Calendar card
+            CalendarCard(
+                currentMonth = uiState.currentMonth,
+                workoutDates = uiState.workoutDates,
+                onPreviousMonth = viewModel::previousMonth,
+                onNextMonth = viewModel::nextMonth,
+                onDayClick = onDayClick,
+            )
 
             // Daily motivational GIF — fills available space between streak and buttons
             Box(
@@ -267,33 +260,6 @@ private fun CalendarCard(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun StreakBadge(streak: Int) {
-    if (streak <= 0) return
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 12.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(BackgroundCard)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center,
-    ) {
-        Text(
-            text = "\uD83D\uDD25",
-            fontSize = 24.sp,
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(
-            text = if (streak == 1) "1 Day Streak" else "$streak Day Streak",
-            color = TextOnDark,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-        )
     }
 }
 

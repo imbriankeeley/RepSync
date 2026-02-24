@@ -10,11 +10,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -27,10 +29,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.repsync.app.ui.components.ExerciseNameField
 import com.repsync.app.ui.theme.BackgroundCard
@@ -42,6 +47,8 @@ import com.repsync.app.ui.theme.TextOnDark
 import com.repsync.app.ui.theme.TextOnDarkSecondary
 import com.repsync.app.ui.viewmodel.ExerciseUiModel
 import com.repsync.app.ui.viewmodel.NewWorkoutViewModel
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
 
 @Composable
 fun NewWorkoutScreen(
@@ -68,6 +75,7 @@ fun NewWorkoutScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .imePadding()
             .background(BackgroundPrimary),
     ) {
         // Header
@@ -79,10 +87,17 @@ fun NewWorkoutScreen(
         )
 
         // Content
+        val lazyListState = rememberLazyListState()
+        val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
+            // Offset by 1 for the workout name input item
+            viewModel.moveExercise(from.index - 1, to.index - 1)
+        }
+
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 16.dp),
+            state = lazyListState,
         ) {
             // Workout name input
             item {
@@ -94,21 +109,34 @@ fun NewWorkoutScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            // Exercise cards
+            // Exercise cards (reorderable)
             itemsIndexed(
                 items = uiState.exercises,
                 key = { _, exercise -> exercise.id },
             ) { _, exercise ->
-                ExerciseCard(
-                    exercise = exercise,
-                    exerciseNameSuggestions = uiState.exerciseNameSuggestions,
-                    onExerciseNameChange = { name ->
-                        viewModel.onExerciseNameChange(exercise.id, name)
-                    },
-                    onAddSet = { viewModel.addSet(exercise.id) },
-                    onRemoveSet = { setIndex -> viewModel.removeSet(exercise.id, setIndex) },
-                    onRemoveExercise = { viewModel.removeExercise(exercise.id) },
-                )
+                ReorderableItem(reorderableLazyListState, key = exercise.id) { isDragging ->
+                    ExerciseCard(
+                        exercise = exercise,
+                        exerciseNameSuggestions = uiState.exerciseNameSuggestions,
+                        onExerciseNameChange = { name ->
+                            viewModel.onExerciseNameChange(exercise.id, name)
+                        },
+                        onAddSet = { viewModel.addSet(exercise.id) },
+                        onRemoveSet = { setIndex -> viewModel.removeSet(exercise.id, setIndex) },
+                        onRemoveExercise = { viewModel.removeExercise(exercise.id) },
+                        modifier = Modifier
+                            .longPressDraggableHandle()
+                            .graphicsLayer {
+                                alpha = if (isDragging) 0.85f else 1f
+                            }
+                            .then(
+                                if (isDragging) Modifier
+                                    .zIndex(1f)
+                                    .shadow(8.dp, RoundedCornerShape(16.dp))
+                                else Modifier
+                            ),
+                    )
+                }
                 Spacer(modifier = Modifier.height(12.dp))
             }
 
@@ -239,9 +267,10 @@ private fun ExerciseCard(
     onAddSet: () -> Unit,
     onRemoveSet: (Int) -> Unit,
     onRemoveExercise: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(BackgroundCard)

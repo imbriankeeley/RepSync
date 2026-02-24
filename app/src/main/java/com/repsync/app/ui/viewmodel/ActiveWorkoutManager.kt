@@ -1,13 +1,8 @@
 package com.repsync.app.ui.viewmodel
 
 import android.app.Application
-import android.content.Context
-import android.media.AudioManager
-import android.media.ToneGenerator
+import android.content.Intent
 import android.os.Build
-import android.os.VibrationEffect
-import android.os.Vibrator
-import android.os.VibratorManager
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.repsync.app.data.RepSyncDatabase
@@ -15,6 +10,8 @@ import com.repsync.app.data.RestTimerPreferences
 import com.repsync.app.data.entity.CompletedExerciseEntity
 import com.repsync.app.data.entity.CompletedSetEntity
 import com.repsync.app.data.entity.CompletedWorkoutEntity
+import com.repsync.app.service.RestTimerService
+import com.repsync.app.service.RestTimerState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -63,7 +60,6 @@ class ActiveWorkoutManager(application: Application) : AndroidViewModel(applicat
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     private var timerJob: Job? = null
-    private var restTimerJob: Job? = null
     private var startedAtMillis: Long = 0L
 
     init {
@@ -71,6 +67,17 @@ class ActiveWorkoutManager(application: Application) : AndroidViewModel(applicat
             restTimerPrefs.durationSeconds.collect { savedDuration ->
                 val current = _activeWorkoutState.value ?: return@collect
                 _activeWorkoutState.value = current.copy(restTimerDurationSeconds = savedDuration)
+            }
+        }
+        viewModelScope.launch {
+            RestTimerState.secondsRemaining.collect { remaining ->
+                val state = _activeWorkoutState.value ?: return@collect
+                _activeWorkoutState.value = state.copy(restTimerSecondsRemaining = remaining)
+            }
+        }
+        viewModelScope.launch {
+            RestTimerState.timerCompleted.collect {
+                onRestTimerComplete()
             }
         }
     }
@@ -236,6 +243,14 @@ class ActiveWorkoutManager(application: Application) : AndroidViewModel(applicat
         )
     }
 
+    fun moveExercise(fromIndex: Int, toIndex: Int) {
+        val current = _activeWorkoutState.value ?: return
+        val exercises = current.exercises.toMutableList()
+        val item = exercises.removeAt(fromIndex)
+        exercises.add(toIndex, item)
+        _activeWorkoutState.value = current.copy(exercises = exercises)
+    }
+
     fun onExerciseNameChange(exerciseId: String, name: String) {
         val current = _activeWorkoutState.value ?: return
         _activeWorkoutState.value = current.copy(
@@ -282,7 +297,7 @@ class ActiveWorkoutManager(application: Application) : AndroidViewModel(applicat
 
     fun cancelWorkout() {
         timerJob?.cancel()
-        restTimerJob?.cancel()
+        dismissRestTimer()
         _activeWorkoutState.value = null
         viewModelScope.launch { _workoutEndedEvent.emit(Unit) }
     }
@@ -299,7 +314,7 @@ class ActiveWorkoutManager(application: Application) : AndroidViewModel(applicat
 
     fun finishWorkout() {
         timerJob?.cancel()
-        restTimerJob?.cancel()
+        dismissRestTimer()
         val state = _activeWorkoutState.value ?: return
         _activeWorkoutState.value = state.copy(showFinishDialog = false)
 
@@ -348,64 +363,34 @@ class ActiveWorkoutManager(application: Application) : AndroidViewModel(applicat
     // Rest timer
 
     private fun startRestTimer() {
-        restTimerJob?.cancel()
         val current = _activeWorkoutState.value ?: return
         val duration = current.restTimerDurationSeconds
-        _activeWorkoutState.value = current.copy(restTimerSecondsRemaining = duration)
-
-        restTimerJob = viewModelScope.launch {
-            var remaining = duration
-            while (remaining > 0) {
-                delay(1000L)
-                remaining--
-                val state = _activeWorkoutState.value ?: break
-                _activeWorkoutState.value = state.copy(restTimerSecondsRemaining = remaining)
-            }
-            onRestTimerComplete()
+        val intent = Intent(getApplication(), RestTimerService::class.java).apply {
+            putExtra(RestTimerService.EXTRA_DURATION_SECONDS, duration)
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            getApplication<Application>().startForegroundService(intent)
+        } else {
+            getApplication<Application>().startService(intent)
         }
     }
 
     fun dismissRestTimer() {
-        restTimerJob?.cancel()
-        val current = _activeWorkoutState.value ?: return
-        _activeWorkoutState.value = current.copy(restTimerSecondsRemaining = 0)
+        val intent = Intent(getApplication(), RestTimerService::class.java).apply {
+            action = RestTimerService.ACTION_STOP
+        }
+        try {
+            getApplication<Application>().startService(intent)
+        } catch (_: Exception) {
+            // Service may not be running
+        }
     }
 
     private fun onRestTimerComplete() {
-        triggerVibration()
-        triggerSound()
-    }
-
-    private fun triggerVibration() {
-        try {
-            val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                val vibratorManager = getApplication<Application>()
-                    .getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
-                vibratorManager.defaultVibrator
-            } else {
-                @Suppress("DEPRECATION")
-                getApplication<Application>()
-                    .getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-            }
-            // Double buzz pattern: buzz, pause, buzz, pause, buzz
-            val pattern = longArrayOf(0, 300, 200, 300, 200, 300)
-            vibrator.vibrate(VibrationEffect.createWaveform(pattern, -1))
-        } catch (_: Exception) {
-            // Vibration may not be available on all devices
-        }
-    }
-
-    private fun triggerSound() {
-        try {
-            val toneGen = ToneGenerator(AudioManager.STREAM_NOTIFICATION, ToneGenerator.MAX_VOLUME)
-            toneGen.startTone(ToneGenerator.TONE_PROP_BEEP2, 600)
-            viewModelScope.launch {
-                delay(700L)
-                toneGen.release()
-            }
-        } catch (_: Exception) {
-            // ToneGenerator can fail on some devices/emulators
-        }
+        // Sound and vibration are handled by the service
+        // Just ensure UI state is reset
+        val current = _activeWorkoutState.value ?: return
+        _activeWorkoutState.value = current.copy(restTimerSecondsRemaining = 0)
     }
 
     // Rest timer duration dialog
@@ -464,6 +449,5 @@ class ActiveWorkoutManager(application: Application) : AndroidViewModel(applicat
     override fun onCleared() {
         super.onCleared()
         timerJob?.cancel()
-        restTimerJob?.cancel()
     }
 }

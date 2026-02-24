@@ -18,6 +18,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -30,10 +32,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.repsync.app.data.entity.WorkoutWithExercises
 import com.repsync.app.ui.theme.BackgroundCard
@@ -47,6 +52,8 @@ import com.repsync.app.ui.theme.PrimaryGreen
 import com.repsync.app.ui.theme.TextOnDark
 import com.repsync.app.ui.theme.TextOnDarkSecondary
 import com.repsync.app.ui.viewmodel.WorkoutsListViewModel
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
 
 @Composable
 fun WorkoutsListScreen(
@@ -98,7 +105,8 @@ fun WorkoutsListScreen(
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                     )
                 }
-            } else {
+            } else if (uiState.searchQuery.isNotBlank()) {
+                // Non-reorderable list when searching
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
@@ -117,7 +125,53 @@ fun WorkoutsListScreen(
                             onClick = { viewModel.selectWorkout(workout) },
                         )
                     }
-                    // Bottom spacing for FAB
+                    item {
+                        Spacer(modifier = Modifier.height(80.dp))
+                    }
+                }
+            } else {
+                // Reorderable list when not searching
+                val lazyListState = rememberLazyListState()
+                val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
+                    // Offset by 1 for the header spacer item
+                    viewModel.moveWorkout(from.index - 1, to.index - 1)
+                }
+
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp)
+                        .padding(top = 8.dp),
+                    state = lazyListState,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    item {
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                    itemsIndexed(
+                        items = filteredWorkouts,
+                        key = { _, workout -> workout.workout.id }
+                    ) { _, workout ->
+                        ReorderableItem(reorderableLazyListState, key = workout.workout.id) { isDragging ->
+                            WorkoutListItem(
+                                workout = workout,
+                                onClick = { viewModel.selectWorkout(workout) },
+                                modifier = Modifier
+                                    .longPressDraggableHandle(
+                                        onDragStopped = { viewModel.saveWorkoutOrder() },
+                                    )
+                                    .graphicsLayer {
+                                        alpha = if (isDragging) 0.85f else 1f
+                                    }
+                                    .then(
+                                        if (isDragging) Modifier
+                                            .zIndex(1f)
+                                            .shadow(8.dp, RoundedCornerShape(12.dp))
+                                        else Modifier
+                                    ),
+                            )
+                        }
+                    }
                     item {
                         Spacer(modifier = Modifier.height(80.dp))
                     }
@@ -258,9 +312,10 @@ private fun WorkoutsHeader(
 private fun WorkoutListItem(
     workout: WorkoutWithExercises,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
             .background(BackgroundCard)
