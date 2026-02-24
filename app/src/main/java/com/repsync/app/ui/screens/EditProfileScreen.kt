@@ -12,10 +12,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -30,6 +31,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -85,7 +87,7 @@ fun EditProfileScreen(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize().imePadding()) {
+    Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -386,6 +388,16 @@ fun EditProfileScreen(
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
+
+                // Extra space when keyboard is open so content can scroll above it
+                val imeBottom = WindowInsets.ime.getBottom(LocalDensity.current)
+                if (imeBottom > 0) {
+                    Spacer(
+                        modifier = Modifier.height(
+                            with(LocalDensity.current) { imeBottom.toDp() }
+                        ),
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))

@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -407,7 +406,6 @@ private fun AddBodyweightDialog(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .imePadding()
             .background(BackgroundPrimary.copy(alpha = 0.7f))
             .clickable { onDismiss() },
         contentAlignment = Alignment.Center,
@@ -531,7 +529,6 @@ private fun EditBodyweightDialog(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .imePadding()
             .background(BackgroundPrimary.copy(alpha = 0.7f))
             .clickable { onDismiss() },
         contentAlignment = Alignment.Center,
