@@ -143,7 +143,7 @@ fun ProfileScreen(
             BodyweightSection(
                 latestWeight = uiState.latestBodyweight,
                 chartData = uiState.bodyweightChartData,
-                recentEntries = uiState.bodyweightEntries.reversed().take(4),
+                recentEntries = uiState.bodyweightEntries.reversed().take(3),
                 onAddClick = { viewModel.showAddBodyweightDialog() },
                 onEditEntry = { viewModel.showEditBodyweightDialog(it) },
                 onDeleteEntry = { viewModel.deleteBodyweightEntry(it) },
