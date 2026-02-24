@@ -31,41 +31,42 @@ import coil.decode.ImageDecoderDecoder
 import coil.request.ImageRequest
 import com.repsync.app.ui.theme.BackgroundCard
 import com.repsync.app.ui.theme.TextOnDarkSecondary
-import java.time.LocalDate
 
 /**
- * Curated list of funny workout / motivational GIF URLs.
- * Uses direct media links for reliability.
+ * Curated list of anime motivational GIF URLs.
+ * Uses direct media links for reliability. New random GIF each app open.
  */
 private val workoutGifs = listOf(
-    "https://media.giphy.com/media/3oKIPavRPgJYaNI97W/giphy.gif",
-    "https://media.giphy.com/media/ZaKcIYMjNYMKjbBp1o/giphy.gif",
-    "https://media.giphy.com/media/l0HUbtILos6CfpevC/giphy.gif",
-    "https://media.giphy.com/media/YqbByMOb8cPbMzgLbf/giphy.gif",
-    "https://media.giphy.com/media/5GoVLqeAOo6PK/giphy.gif",
-    "https://media.giphy.com/media/KzM1lAfJjCWNq/giphy.gif",
-    "https://media.giphy.com/media/WUlplcMpOCEmTGBtBW/giphy.gif",
-    "https://media.giphy.com/media/Vccpm1O9gV1g4/giphy.gif",
-    "https://media.giphy.com/media/3ohhwoWSCtJzznXbuo/giphy.gif",
-    "https://media.giphy.com/media/l46CyJmS9KUbokzsI/giphy.gif",
-    "https://media.giphy.com/media/j3IxJRLNLZz9sXR7ZA/giphy.gif",
-    "https://media.giphy.com/media/xUOxfoA5ffZ8xoTDC8/giphy.gif",
-    "https://media.giphy.com/media/xT0xeuOy2Fcl9vDGiA/giphy.gif",
-    "https://media.giphy.com/media/CjmvTCZf2U3p09Cn0h/giphy.gif",
-    "https://media.giphy.com/media/kaBmqpJMOEJGM/giphy.gif",
+    "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMHNqeXd3am00MzV1aDltaHlxNXk0enk5dWpsdW52cXZ5MmQ1cXdibSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/fqrXU5bfnbQg9bCAKI/giphy.gif",
+    "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcTBjYmRsdmMyY2xic2traTJwZ2Nub20ydGdtc2RsdndhbzE5bGRwMCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/rzHpW6vWZX3ghRP2Cc/giphy.gif",
+    "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZHE0eGFnODhkdDV0amRkejNlMnZ2amxqYzNqazNiczhxOWdkeWdxZiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/12bF3AWU423YeA/giphy.gif",
+    "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZHE0eGFnODhkdDV0amRkejNlMnZ2amxqYzNqazNiczhxOWdkeWdxZiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/ktDkLA5Hp9dM4/giphy.gif",
+    "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZHE0eGFnODhkdDV0amRkejNlMnZ2amxqYzNqazNiczhxOWdkeWdxZiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/6KfOhA4rh822RS0Phn/giphy.gif",
+    "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZHE0eGFnODhkdDV0amRkejNlMnZ2amxqYzNqazNiczhxOWdkeWdxZiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/l0Iymo6MEqAJfHaso/giphy.gif",
+    "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3YWVodjl6N28zbGpiamcwOWg4MzJ2NGJldTI4dHl5Nm9tcmJsNzlmaiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/YZX4FWwOJTK5W/giphy.gif",
+    "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcGoxaG5qM3Q0MnU4b3J4YnR2dTE3cm4xaDA0dWs4eXdycjltbHk3ZiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/gKc0n2MdnezJK/giphy.gif",
+    "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMWh2d2FpeWMxcDAzcnEwa3Q2eHRzbXJrbDFhbTNicm5oZThhdWRkZiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/jleNxE9BsJVO8/giphy.gif",
+    "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMWh2d2FpeWMxcDAzcnEwa3Q2eHRzbXJrbDFhbTNicm5oZThhdWRkZiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/VFBAJmjmArR6jcWr9G/giphy.gif",
+    "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMWh2d2FpeWMxcDAzcnEwa3Q2eHRzbXJrbDFhbTNicm5oZThhdWRkZiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/qW3iR9I30ndCM/giphy.gif",
+    "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3bzB0Z29pc3h5eW01bTFqajVpc3IweGxydmQ4b3FlcWNwNnlna3BtNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/9jNjhwA5S4zMQ/giphy.gif",
+    "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExaml0bHA2OTlwc2hwOXBtYTczOWhobmJmNzNuM3R0N3hmcDVxbTJ3OCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/54R23E45hwjrMrj450/giphy.gif",
+    "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExaml0bHA2OTlwc2hwOXBtYTczOWhobmJmNzNuM3R0N3hmcDVxbTJ3OCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/pRgMFB4CxBAILSZsLH/giphy.gif",
+    "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExaml0bHA2OTlwc2hwOXBtYTczOWhobmJmNzNuM3R0N3hmcDVxbTJ3OCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/UejTmpSCJ0ikb2lXWS/giphy.gif",
+    "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExaml0bHA2OTlwc2hwOXBtYTczOWhobmJmNzNuM3R0N3hmcDVxbTJ3OCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/enRj5D72igadpxSYDM/giphy.gif",
+    "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExaml0bHA2OTlwc2hwOXBtYTczOWhobmJmNzNuM3R0N3hmcDVxbTJ3OCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/JRX5tDQRpe3uI45az0/giphy.gif",
 )
 
 /**
- * Funny fallback emoji combos shown when GIF can't load (no internet).
+ * Anime-themed fallback emoji combos shown when GIF can't load (no internet).
  */
 private val fallbackEmojis = listOf(
-    "\uD83D\uDCAA\uD83D\uDE24",       // flexing + determined
-    "\uD83C\uDFCB\uFE0F\u200D\u2642\uFE0F\uD83D\uDD25", // weightlifter + fire
-    "\uD83E\uDDB5\uD83D\uDCAA",       // leg + flex
-    "\uD83C\uDFC3\u200D\u2642\uFE0F\uD83D\uDCA8", // running + dash
-    "\uD83E\uDD3C\u200D\u2642\uFE0F\uD83D\uDE04", // wrestler + grin
-    "\uD83E\uDDD8\u200D\u2642\uFE0F\u2728", // meditating + sparkle
-    "\uD83C\uDFCB\uFE0F\u200D\u2640\uFE0F\uD83D\uDCAF", // weightlifter + 100
+    "\u2728\uD83C\uDF38",             // sparkle + cherry blossom
+    "\uD83D\uDCAB\uD83C\uDF19",       // dizzy + crescent moon
+    "\uD83C\uDF1F\uD83C\uDF80",       // star + ribbon
+    "\uD83D\uDD25\u2764\uFE0F",       // fire + heart
+    "\uD83C\uDF38\uD83D\uDCAA",       // cherry blossom + flex
+    "\u2B50\uD83C\uDF1F",             // star + glowing star
+    "\uD83E\uDD0D\u2728",             // white heart + sparkle
 )
 
 /**
@@ -77,8 +78,7 @@ fun MotivationalGif(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     var loadFailed by remember { mutableStateOf(false) }
 
-    val dayOfYear = remember { LocalDate.now().dayOfYear }
-    val gifUrl = remember { workoutGifs[dayOfYear % workoutGifs.size] }
+    val gifUrl = remember { workoutGifs.random() }
 
     val imageLoader = remember {
         ImageLoader.Builder(context)
@@ -106,7 +106,7 @@ fun MotivationalGif(modifier: Modifier = Modifier) {
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = fallbackEmojis[dayOfYear % fallbackEmojis.size],
+                    text = fallbackEmojis.random(),
                     fontSize = 48.sp,
                 )
                 Spacer(modifier = Modifier.height(8.dp))
