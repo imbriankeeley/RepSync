@@ -38,6 +38,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.repsync.app.data.entity.BodyweightEntryEntity
 import com.repsync.app.ui.components.ChartDataPoint
 import com.repsync.app.ui.components.ProfileAvatar
 import com.repsync.app.ui.components.StreakBadge
@@ -45,11 +46,14 @@ import com.repsync.app.ui.components.WeightProgressionChart
 import com.repsync.app.ui.theme.BackgroundCard
 import com.repsync.app.ui.theme.BackgroundCardElevated
 import com.repsync.app.ui.theme.BackgroundPrimary
+import com.repsync.app.ui.theme.DestructiveRed
 import com.repsync.app.ui.theme.InputBackground
 import com.repsync.app.ui.theme.PrimaryGreen
 import com.repsync.app.ui.theme.TextOnDark
 import com.repsync.app.ui.theme.TextOnDarkSecondary
 import com.repsync.app.ui.viewmodel.ProfileViewModel
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun ProfileScreen(
@@ -139,7 +143,10 @@ fun ProfileScreen(
             BodyweightSection(
                 latestWeight = uiState.latestBodyweight,
                 chartData = uiState.bodyweightChartData,
+                recentEntries = uiState.bodyweightEntries.reversed().take(4),
                 onAddClick = { viewModel.showAddBodyweightDialog() },
+                onEditEntry = { viewModel.showEditBodyweightDialog(it) },
+                onDeleteEntry = { viewModel.deleteBodyweightEntry(it) },
                 onViewAllEntries = onNavigateToBodyweightEntries,
                 modifier = Modifier.weight(1f),
             )
@@ -155,6 +162,15 @@ fun ProfileScreen(
                 onSave = { weight -> viewModel.addBodyweightEntry(weight) },
             )
         }
+
+        // Edit bodyweight dialog overlay
+        if (uiState.showEditBodyweightDialog && uiState.editingBodyweightEntry != null) {
+            EditBodyweightDialog(
+                entry = uiState.editingBodyweightEntry!!,
+                onDismiss = { viewModel.dismissEditBodyweightDialog() },
+                onSave = { id, newWeight -> viewModel.updateBodyweightEntry(id, newWeight) },
+            )
+        }
     }
 }
 
@@ -162,10 +178,15 @@ fun ProfileScreen(
 private fun BodyweightSection(
     latestWeight: Double?,
     chartData: List<ChartDataPoint>,
+    recentEntries: List<BodyweightEntryEntity>,
     onAddClick: () -> Unit,
+    onEditEntry: (BodyweightEntryEntity) -> Unit,
+    onDeleteEntry: (BodyweightEntryEntity) -> Unit,
     onViewAllEntries: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val displayFmt = remember { DateTimeFormatter.ofPattern("MMM d, yyyy") }
+
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -256,7 +277,96 @@ private fun BodyweightSection(
             }
         }
 
-        Spacer(modifier = Modifier.weight(1f))
+        // Recent Entries — measure available space and show as many as fit
+        if (recentEntries.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Text(
+                text = "Recent Entries",
+                color = TextOnDarkSecondary,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Each entry row is ~48dp (10dp vertical padding * 2 + 28dp icon) + 4dp gap
+            // Use weight(1f) Column to fill remaining space, no scroll
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                recentEntries.forEach { entry ->
+                    val dateText = runCatching {
+                        LocalDate.parse(entry.date).format(displayFmt)
+                    }.getOrDefault(entry.date)
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(BackgroundCardElevated)
+                            .padding(horizontal = 14.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = dateText,
+                            color = TextOnDarkSecondary,
+                            fontSize = 14.sp,
+                            modifier = Modifier.weight(1f),
+                        )
+
+                        Text(
+                            text = "${formatBodyweight(entry.weight)} lbs",
+                            color = TextOnDark,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Medium,
+                        )
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        // Edit button
+                        Box(
+                            modifier = Modifier
+                                .size(28.dp)
+                                .clip(CircleShape)
+                                .background(BackgroundCard)
+                                .clickable { onEditEntry(entry) },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = "\u270E",
+                                color = TextOnDarkSecondary,
+                                fontSize = 14.sp,
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        // Delete button
+                        Box(
+                            modifier = Modifier
+                                .size(28.dp)
+                                .clip(CircleShape)
+                                .background(DestructiveRed.copy(alpha = 0.8f))
+                                .clickable { onDeleteEntry(entry) },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = "X",
+                                color = TextOnDark,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
+                    }
+                }
+            }
+        } else {
+            Spacer(modifier = Modifier.weight(1f))
+        }
 
         // View All Entries button
         Box(
@@ -385,6 +495,138 @@ private fun AddBodyweightDialog(
                             val weight = weightText.toDoubleOrNull()
                             if (weight != null && weight > 0) {
                                 onSave(weight)
+                            }
+                        },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "Save",
+                        color = TextOnDark,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun EditBodyweightDialog(
+    entry: BodyweightEntryEntity,
+    onDismiss: () -> Unit,
+    onSave: (Long, Double) -> Unit,
+) {
+    var weightText by remember { mutableStateOf(formatBodyweight(entry.weight)) }
+    val displayFmt = remember { DateTimeFormatter.ofPattern("MMM d, yyyy") }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .imePadding()
+            .background(BackgroundPrimary.copy(alpha = 0.7f))
+            .clickable { onDismiss() },
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 32.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(BackgroundCard)
+                .clickable { /* Consume clicks */ }
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                text = "Edit Weight",
+                color = TextOnDark,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            val dateText = runCatching {
+                LocalDate.parse(entry.date).format(displayFmt)
+            }.getOrDefault(entry.date)
+            Text(
+                text = dateText,
+                color = TextOnDarkSecondary,
+                fontSize = 14.sp,
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            BasicTextField(
+                value = weightText,
+                onValueChange = { newValue ->
+                    if (newValue.isEmpty() || newValue.matches(Regex("^\\d*\\.?\\d*$"))) {
+                        weightText = newValue
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(InputBackground)
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                textStyle = androidx.compose.ui.text.TextStyle(
+                    color = TextOnDark,
+                    fontSize = 18.sp,
+                    textAlign = TextAlign.Center,
+                ),
+                cursorBrush = SolidColor(PrimaryGreen),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                singleLine = true,
+                decorationBox = { innerTextField ->
+                    Box(contentAlignment = Alignment.Center) {
+                        if (weightText.isEmpty()) {
+                            Text(
+                                text = "Weight (lbs)",
+                                color = TextOnDarkSecondary,
+                                fontSize = 18.sp,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
+                        innerTextField()
+                    }
+                },
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(44.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(BackgroundCardElevated)
+                        .clickable { onDismiss() },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "Cancel",
+                        color = TextOnDarkSecondary,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(44.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(PrimaryGreen)
+                        .clickable {
+                            val weight = weightText.toDoubleOrNull()
+                            if (weight != null && weight > 0) {
+                                onSave(entry.id, weight)
                             }
                         },
                     contentAlignment = Alignment.Center,

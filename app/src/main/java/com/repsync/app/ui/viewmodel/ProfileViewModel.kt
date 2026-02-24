@@ -36,6 +36,8 @@ data class ProfileUiState(
     val bodyweightChartData: List<ChartDataPoint> = emptyList(),
     val latestBodyweight: Double? = null,
     val showAddBodyweightDialog: Boolean = false,
+    val showEditBodyweightDialog: Boolean = false,
+    val editingBodyweightEntry: BodyweightEntryEntity? = null,
     // Workout schedule days (source of truth for streaks AND reminders)
     val workoutDays: Set<DayOfWeek> = emptySet(),
     // Reminder settings (uses workoutDays for scheduling)
@@ -205,6 +207,27 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     fun deleteBodyweightEntry(entry: BodyweightEntryEntity) {
         viewModelScope.launch {
             bodyweightDao.delete(entry)
+        }
+    }
+
+    fun showEditBodyweightDialog(entry: BodyweightEntryEntity) {
+        _uiState.value = _uiState.value.copy(
+            editingBodyweightEntry = entry,
+            showEditBodyweightDialog = true,
+        )
+    }
+
+    fun dismissEditBodyweightDialog() {
+        _uiState.value = _uiState.value.copy(
+            editingBodyweightEntry = null,
+            showEditBodyweightDialog = false,
+        )
+    }
+
+    fun updateBodyweightEntry(id: Long, newWeight: Double) {
+        viewModelScope.launch {
+            bodyweightDao.updateWeight(id, newWeight)
+            dismissEditBodyweightDialog()
         }
     }
 
