@@ -10,15 +10,14 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Icon
@@ -39,14 +38,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.repsync.app.data.entity.BodyweightEntryEntity
 import com.repsync.app.ui.components.ChartDataPoint
 import com.repsync.app.ui.components.ProfileAvatar
+import com.repsync.app.ui.components.StreakBadge
 import com.repsync.app.ui.components.WeightProgressionChart
 import com.repsync.app.ui.theme.BackgroundCard
 import com.repsync.app.ui.theme.BackgroundCardElevated
 import com.repsync.app.ui.theme.BackgroundPrimary
-import com.repsync.app.ui.theme.DestructiveRed
 import com.repsync.app.ui.theme.InputBackground
 import com.repsync.app.ui.theme.PrimaryGreen
 import com.repsync.app.ui.theme.TextOnDark
@@ -56,6 +54,7 @@ import com.repsync.app.ui.viewmodel.ProfileViewModel
 @Composable
 fun ProfileScreen(
     onNavigateToEditProfile: () -> Unit,
+    onNavigateToBodyweightEntries: () -> Unit,
     viewModel: ProfileViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -132,15 +131,16 @@ fun ProfileScreen(
                 }
             }
 
+            StreakBadge(streak = uiState.currentStreak)
+
             Spacer(modifier = Modifier.height(12.dp))
 
             // Bodyweight section
             BodyweightSection(
                 latestWeight = uiState.latestBodyweight,
                 chartData = uiState.bodyweightChartData,
-                entries = uiState.bodyweightEntries,
                 onAddClick = { viewModel.showAddBodyweightDialog() },
-                onDeleteEntry = { viewModel.deleteBodyweightEntry(it) },
+                onViewAllEntries = onNavigateToBodyweightEntries,
                 modifier = Modifier.weight(1f),
             )
 
@@ -162,9 +162,8 @@ fun ProfileScreen(
 private fun BodyweightSection(
     latestWeight: Double?,
     chartData: List<ChartDataPoint>,
-    entries: List<BodyweightEntryEntity>,
     onAddClick: () -> Unit,
-    onDeleteEntry: (BodyweightEntryEntity) -> Unit,
+    onViewAllEntries: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -257,81 +256,25 @@ private fun BodyweightSection(
             }
         }
 
-        // Recent entries list (scrollable, shows most recent first)
-        if (entries.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.weight(1f))
 
+        // View All Entries button
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(PrimaryGreen.copy(alpha = 0.15f))
+                .clickable { onViewAllEntries() }
+                .padding(vertical = 10.dp),
+            contentAlignment = Alignment.Center,
+        ) {
             Text(
-                text = "Recent Entries",
-                color = TextOnDarkSecondary,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Medium,
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState()),
-            ) {
-                // Show entries in reverse chronological order
-                entries.reversed().forEach { entry ->
-                    BodyweightEntryRow(
-                        entry = entry,
-                        onDelete = { onDeleteEntry(entry) },
-                    )
-                }
-            }
-        } else {
-            Spacer(modifier = Modifier.weight(1f))
-        }
-    }
-}
-
-@Composable
-private fun BodyweightEntryRow(
-    entry: BodyweightEntryEntity,
-    onDelete: () -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        Text(
-            text = entry.date,
-            color = TextOnDarkSecondary,
-            fontSize = 13.sp,
-        )
-
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = "${formatBodyweight(entry.weight)} lbs",
-                color = TextOnDark,
+                text = "View All Entries",
+                color = PrimaryGreen,
                 fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
+                fontWeight = FontWeight.SemiBold,
             )
-
-            Spacer(modifier = Modifier.width(10.dp))
-
-            Box(
-                modifier = Modifier
-                    .size(22.dp)
-                    .clip(CircleShape)
-                    .background(DestructiveRed.copy(alpha = 0.8f))
-                    .clickable { onDelete() },
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = "X",
-                    color = TextOnDark,
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-            }
         }
     }
 }
@@ -346,6 +289,7 @@ private fun AddBodyweightDialog(
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .imePadding()
             .background(BackgroundPrimary.copy(alpha = 0.7f))
             .clickable { onDismiss() },
         contentAlignment = Alignment.Center,
