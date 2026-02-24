@@ -21,4 +21,7 @@ interface BodyweightDao {
 
     @Query("SELECT * FROM bodyweight_entries ORDER BY date DESC LIMIT 1")
     fun getLatestEntry(): Flow<BodyweightEntryEntity?>
+
+    @Query("UPDATE bodyweight_entries SET weight = :weight WHERE id = :id")
+    suspend fun updateWeight(id: Long, weight: Double)
 }
